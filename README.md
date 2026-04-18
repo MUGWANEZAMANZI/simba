@@ -5,11 +5,44 @@ Modern Simba Supermarket storefront built with React and Vite using the provided
 ## Run
 
 1. `npm install`
-2. `npm run dev:full`
+2. `npm run dev`
 
 ## Build
 
 `npm run build`
+
+## Deploy On Render
+
+This project is a single full-stack service on Render:
+
+- Vite builds the frontend into `dist`
+- Express serves both `/api/*` and the built frontend
+
+### Option A: Use `render.yaml` (recommended)
+
+1. Push this repo to GitHub.
+2. In Render, create a new Blueprint and point it to the repo.
+3. Render will read `render.yaml` and create the web service.
+
+### Option B: Manual Web Service Setup
+
+- Build Command: `npm ci --include=dev && npm run build`
+- Start Command: `npm start`
+
+### Required Environment Variables
+
+- `NODE_VERSION=20`
+- `DATABASE_PATH=/var/data/simba.db`
+
+### Persistent Disk (important)
+
+SQLite needs persistent storage on Render.
+
+1. Add a persistent disk to the service.
+2. Mount path: `/var/data`
+3. Keep `DATABASE_PATH=/var/data/simba.db`
+
+Without a persistent disk, your orders/accounts database resets on each deploy/restart.
 
 ## Backend
 

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: simba-supermarket
+    env: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: DATABASE_PATH
+        value: /var/data/simba.db
+    disk:
+      name: simba-data
+      mountPath: /var/data
+      sizeGB: 1

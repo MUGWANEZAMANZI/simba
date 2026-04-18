@@ -7,9 +7,10 @@ import { fileURLToPath } from "node:url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const dbDir = path.join(__dirname, "data");
-const dbPath = path.join(dbDir, "simba.db");
+const dbPath = process.env.DATABASE_PATH || path.join(dbDir, "simba.db");
+const productsPath = path.join(__dirname, "../simba_products.json");
 
-fs.mkdirSync(dbDir, { recursive: true });
+fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
 const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
@@ -40,6 +41,7 @@ db.exec(`
     items_json TEXT NOT NULL,
     subtotal REAL NOT NULL,
     total REAL NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
     created_at TEXT NOT NULL
   );
 `);
@@ -71,6 +73,41 @@ const insertOrder = db.prepare(`
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));
+
+// Products API
+app.get("/api/products", (req, res) => {
+  try {
+    const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to read products file." });
+  }
+});
+
+// Admin Products API
+app.post("/api/admin/products", (req, res) => {
+  try {
+    const product = req.body;
+    if (!product.name || !product.price || !product.category) {
+      return res.status(400).json({ error: "Missing product fields." });
+    }
+    
+    const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
+    const newId = Math.max(...data.products.map(p => p.id), 0) + 1;
+    const newProduct = {
+      id: newId,
+      ...product,
+      inStock: true,
+      image: product.image || `https://placehold.co/300x300/f0f0f0/555?text=${encodeURIComponent(product.name)}`
+    };
+    
+    data.products.push(newProduct);
+    fs.writeFileSync(productsPath, JSON.stringify(data, null, 2));
+    res.status(201).json(newProduct);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update products." });
+  }
+});
 
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true });
@@ -115,10 +152,47 @@ app.post("/api/orders", (req, res) => {
     created_at: timestamp,
   });
 
-  return res.status(201).json({ id: result.lastInsertRowid });
+  const orderId = result.lastInsertRowid;
+  const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId);
+
+  return res.status(201).json(order);
 });
+
+// User API
+app.get("/api/user/:phone", (req, res) => {
+  const { phone } = req.params;
+  const account = db.prepare("SELECT * FROM accounts WHERE phone = ?").get(phone);
+  if (!account) return res.status(404).json({ error: "User not found." });
+
+  const orders = db.prepare("SELECT * FROM orders WHERE phone = ? ORDER BY created_at DESC").all(phone);
+  res.json({ account, orders });
+});
+
+// Admin APIs
+app.get("/api/admin/users", (req, res) => {
+  const users = db.prepare("SELECT * FROM accounts ORDER BY last_order_at DESC").all();
+  res.json(users);
+});
+
+app.get("/api/admin/orders", (req, res) => {
+  const orders = db.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
+  res.json(orders);
+});
+
+// Serve static files from the Vite build directory
+const distPath = path.join(__dirname, "../dist");
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  
+  // Handle client-side routing
+  app.get("*any", (req, res) => {
+    if (req.path.startsWith("/api")) return res.status(404).json({ error: "Not found" });
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
 
 const port = Number(process.env.PORT || 8787);
 app.listen(port, () => {
   console.log(`Simba API listening on http://localhost:${port}`);
+  console.log(`Using database at: ${dbPath}`);
 });
