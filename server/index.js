@@ -88,7 +88,7 @@ app.get("/api/products", (req, res) => {
 app.post("/api/admin/products", (req, res) => {
   try {
     const product = req.body;
-    if (!product.name || !product.price || !product.category) {
+    if (!product.name || !product.price || !product.category || !product.location || !product.image) {
       return res.status(400).json({ error: "Missing product fields." });
     }
     
@@ -98,7 +98,6 @@ app.post("/api/admin/products", (req, res) => {
       id: newId,
       ...product,
       inStock: true,
-      image: product.image || `https://placehold.co/300x300/f0f0f0/555?text=${encodeURIComponent(product.name)}`
     };
     
     data.products.push(newProduct);

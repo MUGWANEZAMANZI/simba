@@ -1235,6 +1235,10 @@ function App() {
                             <dd>{selectedProduct.unit}</dd>
                           </div>
                           <div>
+                            <dt>Location</dt>
+                            <dd>{selectedProduct.location || "Main warehouse"}</dd>
+                          </div>
+                          <div>
                             <dt>Status</dt>
                             <dd>{selectedProduct.inStock ? "In stock" : "Unavailable"}</dd>
                           </div>

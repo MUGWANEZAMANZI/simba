@@ -4,7 +4,14 @@ export default function AdminPortal({ onBack, onLogout, adminName, t, formatCurr
   const [activeTab, setActiveTab] = useState("orders");
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
-  const [newProduct, setNewProduct] = useState({ name: "", price: "", category: "", unit: "Pcs" });
+  const [newProduct, setNewProduct] = useState({
+    name: "",
+    price: "",
+    category: "",
+    unit: "Pcs",
+    location: "",
+    image: "",
+  });
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState("");
 
@@ -35,7 +42,7 @@ export default function AdminPortal({ onBack, onLogout, adminName, t, formatCurr
       });
       if (res.ok) {
         alert("Product added successfully!");
-        setNewProduct({ name: "", price: "", category: "", unit: "Pcs" });
+        setNewProduct({ name: "", price: "", category: "", unit: "Pcs", location: "", image: "" });
       }
     } finally {
       setLoading(false);
@@ -166,6 +173,23 @@ export default function AdminPortal({ onBack, onLogout, adminName, t, formatCurr
                 onChange={e => setNewProduct({ ...newProduct, unit: e.target.value })}
                 required
               />
+              <input
+                type="text"
+                placeholder="Location (e.g. Kigali Warehouse, Aisle 3)"
+                value={newProduct.location}
+                onChange={e => setNewProduct({ ...newProduct, location: e.target.value })}
+                required
+              />
+              <input
+                type="url"
+                placeholder="Cloud image URL"
+                value={newProduct.image}
+                onChange={e => setNewProduct({ ...newProduct, image: e.target.value })}
+                required
+              />
+              <p className="hero-meta admin-form-note">
+                Upload the image to a cloud service first, then paste the public link here.
+              </p>
               <button type="submit" className="primary-button" disabled={loading}>
                 {loading ? "Adding..." : "Add Product"}
               </button>
