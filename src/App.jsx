@@ -1,12 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import dataset from "../simba_products.json";
 import CartDrawer from "./components/CartDrawer";
+import UserProfile from "./components/UserProfile";
+import OrderTracker from "./components/OrderTracker";
+import AdminPortal from "./components/AdminPortal";
+
+const ADMIN_SECRET = "NobOdyLikesMe";
 
 const STORAGE_KEYS = {
   cart: "simba-cart",
   theme: "simba-theme",
   language: "simba-language",
   customer: "simba-customer",
+  loggedInPhone: "simba-logged-in-phone",
 };
 
 const categoryImages = {
@@ -24,8 +29,12 @@ const categoryImages = {
     "https://images.unsplash.com/photo-1511556820780-d912e42b4980?auto=format&fit=crop&w=1200&q=80",
   "Kitchenware & Electronics":
     "https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1200&q=80",
-  "Sports & Fitness":
+  "Sports & Wellness":
     "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1200&q=80",
+  "Kitchen Storage":
+    "https://images.unsplash.com/photo-1590794056226-79ef3a8147e1?auto=format&fit=crop&w=1200&q=80",
+  "Pet Care":
+    "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=1200&q=80",
   Stationery:
     "https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80",
 };
@@ -306,15 +315,10 @@ const formatCurrency = (value, locale, currency) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-const normalizeProducts = dataset.products.map((product) => ({
-  ...product,
-  slug: `${product.id}-${product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-}));
-
 function resolveProductImage(product) {
+  if (!/placehold\.co/i.test(product.image)) return product.image;
   const override = productImageOverrides.find((entry) => entry.test.test(product.name));
   if (override) return override.image;
-  if (!/placehold\.co/i.test(product.image)) return product.image;
   return categoryImages[product.category] || product.image;
 }
 
@@ -406,7 +410,7 @@ async function fetchAyaRecommendations(feeling, candidates) {
     return {
       source: "fallback",
       picks: fallback,
-      note: "Set VITE_HF_TOKEN to enable Aya recommendations from Hugging Face.",
+      note: "Set VITE_HF_TOKEN to enable Gasuku recommendations from Hugging Face.",
     };
   }
 
@@ -447,7 +451,7 @@ async function fetchAyaRecommendations(feeling, candidates) {
   });
 
   if (!response.ok) {
-    throw new Error(`Aya request failed with status ${response.status}`);
+    throw new Error(`Gasuku request failed with status ${response.status}`);
   }
 
   const data = await response.json();
@@ -505,11 +509,44 @@ function App() {
   });
   const [orderStatus, setOrderStatus] = useState("idle");
 
+  // New States
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [view, setView] = useState("home"); // home, profile, admin, tracking
+  const [activeOrder, setActiveOrder] = useState(null);
+  const [loggedInPhone, setLoggedInPhone] = usePersistentState(STORAGE_KEYS.loggedInPhone, null);
+  const [adminName, setAdminName] = useState("");
+  const [adminCode, setAdminCode] = useState("");
+  const [adminError, setAdminError] = useState("");
+  const [adminAuthorized, setAdminAuthorized] = useState(false);
+  const [adminDisplayName, setAdminDisplayName] = useState("");
+
+  useEffect(() => {
+    fetch("/api/products")
+      .then(res => res.json())
+      .then(data => {
+        setProducts(data.products || []);
+        setProductsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to load products:", err);
+        setProductsLoading(false);
+      });
+  }, []);
+
+  const normalizeProducts = useMemo(() => {
+    return products.map((product) => ({
+      ...product,
+      slug: `${product.id}-${product.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+    }));
+  }, [products]);
+
   const t = languages[language];
   const categories = useMemo(
     () => ["All", ...new Set(normalizeProducts.map((product) => product.category))],
-    [],
+    [normalizeProducts],
   );
+
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -541,7 +578,7 @@ function App() {
 
   const filteredProducts = useMemo(() => {
     const value = search.trim().toLowerCase();
-    
+
     // Create a regex from the search words (min length 3)
     // Speech transcripts often have filler words, so we split and match any significant word
     const words = value.split(/\s+/).filter((w) => w.length >= 3);
@@ -706,12 +743,36 @@ function App() {
   function canAdvanceFromDelivery() {
     return Boolean(
       form.fullname.trim() &&
-        form.phone.trim() &&
-        form.address.trim() &&
-        form.location &&
-        form.deliveryProvider,
+      form.phone.trim() &&
+      form.address.trim() &&
+      form.location &&
+      form.deliveryProvider,
     );
   }
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.replace("#", "");
+      if (hash === "admin") setView("admin");
+      else if (hash === "profile") setView("profile");
+      else if (hash.startsWith("track-")) {
+        const orderId = hash.split("-")[1];
+        fetch(`/api/admin/orders`) // Simplification: fetch all and find or add a specific endpoint
+          .then(res => res.json())
+          .then(orders => {
+            const found = orders.find(o => o.id === Number(orderId));
+            if (found) {
+              setActiveOrder(found);
+              setView("tracking");
+            }
+          });
+      }
+      else setView("home");
+    };
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, []);
 
   async function submitOrder() {
     if (!form.location) {
@@ -746,9 +807,13 @@ function App() {
         throw new Error(`Order API failed with status ${response.status}`);
       }
 
+      const order = await response.json();
       setCheckoutComplete(true);
       setCart({});
       setOrderStatus("idle");
+      setLoggedInPhone(form.phone);
+      setActiveOrder(order);
+      window.location.hash = `track-${order.id}`;
     } catch (error) {
       setOrderStatus("error");
       setRecommendationError(error.message || t.orderFailed);
@@ -774,7 +839,7 @@ function App() {
     } catch (error) {
       const fallback = buildFallbackRecommendations(value, normalizeProducts);
       setRecommendationIds(fallback);
-      setRecommendationIntro("Aya was unavailable, so local inventory matching was used instead.");
+      setRecommendationIntro("Gasuku was unavailable, so local inventory matching was used instead.");
       setRecommendationSource("fallback");
       setRecommendationError(error.message);
     } finally {
@@ -822,6 +887,34 @@ function App() {
     recognition.start();
   }
 
+  function handleAdminLogin(event) {
+    event.preventDefault();
+    const name = adminName.trim();
+
+    if (!name) {
+      setAdminError("Enter your name to continue.");
+      return;
+    }
+
+    if (adminCode !== ADMIN_SECRET) {
+      setAdminError("Invalid admin secret code.");
+      return;
+    }
+
+    setAdminAuthorized(true);
+    setAdminDisplayName(name);
+    setAdminCode("");
+    setAdminError("");
+  }
+
+  function handleAdminLogout() {
+    setAdminAuthorized(false);
+    setAdminDisplayName("");
+    setAdminCode("");
+    setAdminError("");
+    window.location.hash = "";
+  }
+
   const heroCategory =
     category === "All" ? featuredCategories[0] : featuredCategories.find((item) => item.name === category);
 
@@ -829,10 +922,14 @@ function App() {
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">Simba Supermarket</p>
-          <h1>{t.tagline}</h1>
+          <p className="eyebrow" style={{ cursor: 'pointer' }} onClick={() => window.location.hash = ''}>Simba Supermarket</p>
+          <h1 style={{ cursor: 'pointer' }} onClick={() => window.location.hash = ''}>{t.tagline}</h1>
         </div>
         <div className="topbar-actions">
+          <button className="ghost-button" onClick={() => window.location.hash = 'admin'}>Admin</button>
+          {loggedInPhone && (
+            <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>Profile</button>
+          )}
           <select
             value={language}
             onChange={(event) => setLanguage(event.target.value)}
@@ -855,252 +952,326 @@ function App() {
       </header>
 
       <main className="page">
-        <section className="hero">
-          <div className="hero-copy">
-            <span className="pill">{t.heroBadge}</span>
-            <h2>{t.heroTitle}</h2>
-            <p>{t.heroText}</p>
-            <div className="hero-search">
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder={t.searchPlaceholder}
-              />
-              <div className="hero-search-actions">
-                <button onClick={() => document.getElementById("catalogue")?.scrollIntoView()}>
-                  {t.discover}
-                </button>
-                <button
-                  className="secondary-button"
-                  onClick={handleSpeechSearch}
-                  disabled={!speechSupported || speechListening}
-                >
-                  {speechListening ? t.speechListening : t.speechSearch}
-                </button>
-              </div>
-            </div>
-            <p className="hero-meta">{t.deliveryPromise}</p>
+        {productsLoading ? (
+          <div className="card" style={{ textAlign: "center", padding: "4rem" }}>
+            <h2>Loading inventory...</h2>
           </div>
-          <div
-            className="hero-card"
-            style={{ backgroundImage: `linear-gradient(180deg, transparent, rgba(12,16,28,0.82)), url(${heroCategory?.image})` }}
-          >
-            <span>{t.categorySpotlight}</span>
-            <strong>{heroCategory?.name}</strong>
-            <small>
-              {heroCategory?.count} {t.items}
-            </small>
-          </div>
-        </section>
-
-        <section className="recommendation-panel">
-          <div className="section-heading">
-            <h3>Feel-based recommendations</h3>
-            <p>
-              Describe your mood or need and Aya will rank real products from the dataset.
-            </p>
-          </div>
-          <div className="recommendation-controls">
-            <input
-              value={feeling}
-              onChange={(event) => setFeeling(event.target.value)}
-              placeholder="I feel tired and need a quick study boost"
-            />
-            <button onClick={handleRecommend} disabled={recommendationLoading}>
-              {recommendationLoading ? "Thinking..." : "Get recommendations"}
-            </button>
-          </div>
-          {recommendationIntro ? <p className="hero-meta">{recommendationIntro}</p> : null}
-          {recommendationSource ? (
-            <p className="hero-meta">
-              Source: {recommendationSource === "fallback" ? "Local fallback" : `Aya via ${HF_MODEL}`}
-            </p>
-          ) : null}
-          {recommendationError ? <p className="error-text">{recommendationError}</p> : null}
-          {recommendationProducts.length > 0 ? (
-            <div className="recommendation-grid">
-              {recommendationProducts.map((product) => (
-                <article className="mini-card recommendation-card" key={product.id}>
-                  <img src={resolveProductImage(product)} alt={product.name} />
-                  <div className="mini-card-body">
-                    <p className="product-category">{product.category}</p>
-                    <button onClick={() => openProduct(product)}>{product.name}</button>
-                    <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
-                    <p className="recommendation-reason">{product.recommendationReason}</p>
-                    <div className="recommendation-actions">
-                      <button className="secondary-button" onClick={() => openProduct(product)}>
-                        {t.viewDetails}
+        ) : (
+          <>
+            {view === "admin" && (
+              adminAuthorized ? (
+                <AdminPortal
+                  onBack={() => window.location.hash = ""}
+                  onLogout={handleAdminLogout}
+                  adminName={adminDisplayName}
+                  t={t}
+                  formatCurrency={formatCurrency}
+                />
+              ) : (
+                <section className="admin-auth card">
+                  <h2>Admin Access</h2>
+                  <p>Enter your name and secret code to open the admin portal.</p>
+                  <form className="admin-auth-form" onSubmit={handleAdminLogin}>
+                    <input
+                      type="text"
+                      placeholder="Your name"
+                      value={adminName}
+                      onChange={(event) => setAdminName(event.target.value)}
+                      required
+                    />
+                    <input
+                      type="password"
+                      placeholder="Secret code"
+                      value={adminCode}
+                      onChange={(event) => setAdminCode(event.target.value)}
+                      required
+                    />
+                    {adminError ? <p className="admin-auth-error">{adminError}</p> : null}
+                    <div className="admin-auth-actions">
+                      <button type="submit">Open Admin Portal</button>
+                      <button type="button" className="ghost-button" onClick={() => window.location.hash = ""}>
+                        Back to Shop
                       </button>
-                      <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
                     </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          ) : null}
-        </section>
+                  </form>
+                </section>
+              )
+            )}
 
-        <section className="categories-panel">
-          <div className="section-heading">
-            <h3>{t.categories}</h3>
-            <p>
-              {filteredProducts.length} {t.searchResults}
-            </p>
-          </div>
-          <div className="category-strip">
-            {featuredCategories.map((item) => (
-              <button
-                key={item.name}
-                className={item.name === category ? "category-card active" : "category-card"}
-                onClick={() => selectCategory(item.name)}
-                style={{ backgroundImage: `linear-gradient(180deg, rgba(10,17,28,0.15), rgba(10,17,28,0.78)), url(${item.image})` }}
-              >
-                <span>{item.count}</span>
-                <strong>{item.name}</strong>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="controls" id="catalogue">
-          <div className="section-heading">
-            <h3>{t.discover}</h3>
-            <p>{t.featured}</p>
-          </div>
-          <div className="filters">
-            <select
-              value={category}
-              onChange={(event) => selectCategory(event.target.value)}
-            >
-              <option value="All">{t.allCategories}</option>
-              {categories
-                .filter((item) => item !== "All")
-                .map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-            </select>
-            <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-              {sortOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option === "name"
-                    ? t.nameAZ
-                    : option === "price-asc"
-                      ? t.cheapest
-                      : t.priciest}
-                </option>
-              ))}
-            </select>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={stockOnly}
-                onChange={(event) => setStockOnly(event.target.checked)}
+            {view === "profile" && (
+              <UserProfile
+                phone={loggedInPhone}
+                onLogout={() => {
+                  setLoggedInPhone(null);
+                  window.location.hash = "";
+                }}
+                t={t}
+                formatCurrency={formatCurrency}
               />
-              {t.inStockOnly}
-            </label>
-            <button
-              className="ghost-button"
-              onClick={() => {
-                setCategory("All");
-                setSearch("");
-                setStockOnly(false);
-                setSortBy("name");
-                updateQuery({ category: null, product: null });
-              }}
-            >
-              Reset
-            </button>
-          </div>
-        </section>
+            )}
 
-        {!selectedProduct ? (
-          <section className="product-grid">
-            {filteredProducts.map((product) => (
-              <article className="product-card" key={product.id}>
-                <button className="product-image" onClick={() => openProduct(product)}>
-                  <img src={resolveProductImage(product)} alt={product.name} loading="lazy" />
-                </button>
-                <div className="product-body">
-                  <p className="product-category">{product.category}</p>
-                  <button className="product-name" onClick={() => openProduct(product)}>
-                    {product.name}
-                  </button>
-                  <div className="product-meta">
-                    <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
+            {view === "tracking" && activeOrder && (
+              <OrderTracker
+                order={activeOrder}
+                onBack={() => window.location.hash = "profile"}
+              />
+            )}
+
+            {view === "home" && (
+              <>
+                <section className="hero">
+                  <div className="hero-copy">
+                    <span className="pill">{t.heroBadge}</span>
+                    <h2>{t.heroTitle}</h2>
+                    <p>{t.heroText}</p>
+                    <div className="hero-search">
+                      <input
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                        placeholder={t.searchPlaceholder}
+                      />
+                      <div className="hero-search-actions">
+                        <button onClick={() => document.getElementById("catalogue")?.scrollIntoView()}>
+                          {t.discover}
+                        </button>
+                        <button
+                          className="secondary-button"
+                          onClick={handleSpeechSearch}
+                          disabled={!speechSupported || speechListening}
+                        >
+                          {speechListening ? t.speechListening : t.speechSearch}
+                        </button>
+                      </div>
+                    </div>
+                    <p className="hero-meta">{t.deliveryPromise}</p>
+                  </div>
+                  <div
+                    className="hero-card"
+                    style={{ backgroundImage: `linear-gradient(180deg, transparent, rgba(12,16,28,0.82)), url(${heroCategory?.image})` }}
+                  >
+                    <span>{t.categorySpotlight}</span>
+                    <strong>{heroCategory?.name}</strong>
                     <small>
-                      {t.per} {product.unit}
+                      {heroCategory?.count} {t.items}
                     </small>
                   </div>
-                </div>
-                <div className="product-actions">
-                  <button className="secondary-button" onClick={() => openProduct(product)}>
-                    {t.viewDetails}
-                  </button>
-                  <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
-                </div>
-              </article>
-            ))}
-          </section>
-        ) : (
-          <section className="detail-layout">
-            <button className="back-link" onClick={closeProduct}>
-              {t.detailBack}
-            </button>
-            <div className="detail-card">
-              <div className="detail-image-wrap">
-                <img src={resolveProductImage(selectedProduct)} alt={selectedProduct.name} />
-              </div>
-              <div className="detail-copy">
-                <p className="product-category">{selectedProduct.category}</p>
-                <h3>{selectedProduct.name}</h3>
-                <strong>
-                  {formatCurrency(selectedProduct.price, t.locale, t.currency)}
-                </strong>
-                <p>{t.paymentHint}</p>
-                {/placehold\.co/i.test(selectedProduct.image) ? (
-                  <p className="hero-meta">Using a curated Unsplash fallback matched to the product title.</p>
-                ) : null}
-                <dl className="detail-specs">
-                  <div>
-                    <dt>{t.unit}</dt>
-                    <dd>{selectedProduct.unit}</dd>
-                  </div>
-                  <div>
-                    <dt>Status</dt>
-                    <dd>{selectedProduct.inStock ? "In stock" : "Unavailable"}</dd>
-                  </div>
-                  <div>
-                    <dt>ID</dt>
-                    <dd>#{selectedProduct.id}</dd>
-                  </div>
-                </dl>
-                <div className="detail-actions">
-                  <button onClick={() => addToCart(selectedProduct.id)}>{t.quickAdd}</button>
-                  <button className="secondary-button" onClick={() => setCartOpen(true)}>
-                    {t.cart}
-                  </button>
-                </div>
-              </div>
-            </div>
+                </section>
 
-            <div className="related-section">
-              <div className="section-heading">
-                <h3>{t.relatedProducts}</h3>
-                <p>{t.productInfo}</p>
-              </div>
-              <div className="related-grid">
-                {relatedProducts.map((product) => (
-                  <article className="mini-card" key={product.id}>
-                    <img src={resolveProductImage(product)} alt={product.name} />
-                    <button onClick={() => openProduct(product)}>{product.name}</button>
-                    <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
-                  </article>
-                ))}
-              </div>
-            </div>
-          </section>
+                <section className="recommendation-panel recommendation-panel-feature">
+                  <div className="section-heading">
+                    <div>
+                      <span className="recommendation-kicker">Gasuku picks</span>
+                      <h3>Feel-based recommendations</h3>
+                    </div>
+                    <p>
+                      Describe your mood or need and Gasuku will rank real products from the dataset.
+                    </p>
+                  </div>
+                  <div className="recommendation-controls recommendation-controls-feature">
+                    <input
+                      value={feeling}
+                      onChange={(event) => setFeeling(event.target.value)}
+                      placeholder="I feel tired and need a quick study boost"
+                    />
+                    <button onClick={handleRecommend} disabled={recommendationLoading}>
+                      {recommendationLoading ? "Thinking..." : "Get recommendations"}
+                    </button>
+                  </div>
+                  {recommendationIntro ? <p className="hero-meta">{recommendationIntro}</p> : null}
+                  {recommendationSource ? (
+                    <p className="hero-meta">
+                      Source: {recommendationSource === "fallback" ? "Local fallback" : `Gasuku via ${HF_MODEL}`}
+                    </p>
+                  ) : null}
+                  {recommendationError ? <p className="error-text">{recommendationError}</p> : null}
+                  {recommendationProducts.length > 0 ? (
+                    <div className="recommendation-grid">
+                      {recommendationProducts.map((product) => (
+                        <article className="mini-card recommendation-card" key={product.id}>
+                          <img src={resolveProductImage(product)} alt={product.name} />
+                          <div className="mini-card-body">
+                            <p className="product-category">{product.category}</p>
+                            <button onClick={() => openProduct(product)}>{product.name}</button>
+                            <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
+                            <p className="recommendation-reason">{product.recommendationReason}</p>
+                            <div className="recommendation-actions">
+                              <button className="secondary-button" onClick={() => openProduct(product)}>
+                                {t.viewDetails}
+                              </button>
+                              <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
+                            </div>
+                          </div>
+                        </article>
+                      ))}
+                    </div>
+                  ) : null}
+                </section>
+
+                <section className="categories-panel">
+                  <div className="section-heading">
+                    <h3>{t.categories}</h3>
+                    <p>
+                      {filteredProducts.length} {t.searchResults}
+                    </p>
+                  </div>
+                  <div className="category-strip">
+                    {featuredCategories.map((item) => (
+                      <button
+                        key={item.name}
+                        className={item.name === category ? "category-card active" : "category-card"}
+                        onClick={() => selectCategory(item.name)}
+                        style={{ backgroundImage: `linear-gradient(180deg, rgba(10,17,28,0.15), rgba(10,17,28,0.78)), url(${item.image})` }}
+                      >
+                        <span>{item.count}</span>
+                        <strong>{item.name}</strong>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                <section className="controls" id="catalogue">
+                  <div className="section-heading">
+                    <h3>{t.discover}</h3>
+                    <p>{t.featured}</p>
+                  </div>
+                  <div className="filters">
+                    <select
+                      value={category}
+                      onChange={(event) => selectCategory(event.target.value)}
+                    >
+                      <option value="All">{t.allCategories}</option>
+                      {categories
+                        .filter((item) => item !== "All")
+                        .map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                    </select>
+                    <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                      {sortOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option === "name"
+                            ? t.nameAZ
+                            : option === "price-asc"
+                              ? t.cheapest
+                              : t.priciest}
+                        </option>
+                      ))}
+                    </select>
+                    <label className="toggle">
+                      <input
+                        type="checkbox"
+                        checked={stockOnly}
+                        onChange={(event) => setStockOnly(event.target.checked)}
+                      />
+                      {t.inStockOnly}
+                    </label>
+                    <button
+                      className="ghost-button"
+                      onClick={() => {
+                        setCategory("All");
+                        setSearch("");
+                        setStockOnly(false);
+                        setSortBy("name");
+                        updateQuery({ category: null, product: null });
+                      }}
+                    >
+                      Reset
+                    </button>
+                  </div>
+                </section>
+
+                {!selectedProduct ? (
+                  <section className="product-grid">
+                    {filteredProducts.map((product) => (
+                      <article className="product-card" key={product.id}>
+                        <button className="product-image" onClick={() => openProduct(product)}>
+                          <img src={resolveProductImage(product)} alt={product.name} loading="lazy" />
+                        </button>
+                        <div className="product-body">
+                          <p className="product-category">{product.category}</p>
+                          <button className="product-name" onClick={() => openProduct(product)}>
+                            {product.name}
+                          </button>
+                          <div className="product-meta">
+                            <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
+                            <small>
+                              {t.per} {product.unit}
+                            </small>
+                          </div>
+                        </div>
+                        <div className="product-actions">
+                          <button className="secondary-button" onClick={() => openProduct(product)}>
+                            {t.viewDetails}
+                          </button>
+                          <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
+                        </div>
+                      </article>
+                    ))}
+                  </section>
+                ) : (
+                  <section className="detail-layout">
+                    <button className="back-link" onClick={closeProduct}>
+                      {t.detailBack}
+                    </button>
+                    <div className="detail-card">
+                      <div className="detail-image-wrap">
+                        <img src={resolveProductImage(selectedProduct)} alt={selectedProduct.name} />
+                      </div>
+                      <div className="detail-copy">
+                        <p className="product-category">{selectedProduct.category}</p>
+                        <h3>{selectedProduct.name}</h3>
+                        <strong>
+                          {formatCurrency(selectedProduct.price, t.locale, t.currency)}
+                        </strong>
+                        <p>{t.paymentHint}</p>
+                        {/placehold\.co/i.test(selectedProduct.image) ? (
+                          <p className="hero-meta">Using a curated Unsplash fallback matched to the product title.</p>
+                        ) : null}
+                        <dl className="detail-specs">
+                          <div>
+                            <dt>{t.unit}</dt>
+                            <dd>{selectedProduct.unit}</dd>
+                          </div>
+                          <div>
+                            <dt>Status</dt>
+                            <dd>{selectedProduct.inStock ? "In stock" : "Unavailable"}</dd>
+                          </div>
+                          <div>
+                            <dt>ID</dt>
+                            <dd>#{selectedProduct.id}</dd>
+                          </div>
+                        </dl>
+                        <div className="detail-actions">
+                          <button onClick={() => addToCart(selectedProduct.id)}>{t.quickAdd}</button>
+                          <button className="secondary-button" onClick={() => setCartOpen(true)}>
+                            {t.cart}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="related-section">
+                      <div className="section-heading">
+                        <h3>{t.relatedProducts}</h3>
+                        <p>{t.productInfo}</p>
+                      </div>
+                      <div className="related-grid">
+                        {relatedProducts.map((product) => (
+                          <article className="mini-card" key={product.id}>
+                            <img src={resolveProductImage(product)} alt={product.name} />
+                            <button onClick={() => openProduct(product)}>{product.name}</button>
+                            <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  </section>
+                )}
+              </>
+            )}
+          </>
         )}
       </main>
 
