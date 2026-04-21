@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 
-export default function AdminPortal({ onBack, onLogout, adminName, t, formatCurrency }) {
+export default function AdminPortal({ onBack, onLogout, adminName, branchId, t, formatCurrency }) {
   const [activeTab, setActiveTab] = useState("orders");
   const [orders, setOrders] = useState([]);
   const [users, setUsers] = useState([]);
+  const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({
     name: "",
     price: "",
@@ -16,20 +17,27 @@ export default function AdminPortal({ onBack, onLogout, adminName, t, formatCurr
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
+    setLoading(true);
+    const ordersUrl = branchId ? `/api/admin/orders?branchId=${branchId}` : "/api/admin/orders";
+    const productsUrl = branchId ? `/api/products?branchId=${branchId}` : "/api/products";
+    
     Promise.all([
-      fetch("/api/admin/orders").then((res) => (res.ok ? res.json() : [])),
+      fetch(ordersUrl).then((res) => (res.ok ? res.json() : [])),
       fetch("/api/admin/users").then((res) => (res.ok ? res.json() : [])),
+      fetch(productsUrl).then((res) => (res.ok ? res.json() : { products: [] })),
     ])
-      .then(([ordersData, usersData]) => {
+      .then(([ordersData, usersData, productsData]) => {
         setOrders(Array.isArray(ordersData) ? ordersData : []);
         setUsers(Array.isArray(usersData) ? usersData : []);
+        setProducts(productsData.products || []);
       })
       .catch(() => {
         setOrders([]);
         setUsers([]);
-        setLoadError("Failed to load admin data.");
-      });
-  }, []);
+        setLoadError("Failed to load data.");
+      })
+      .finally(() => setLoading(false));
+  }, [branchId]);
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
@@ -143,7 +151,42 @@ export default function AdminPortal({ onBack, onLogout, adminName, t, formatCurr
 
         {activeTab === "inventory" && (
           <div className="admin-section">
-            <h3>Add New Product</h3>
+            <div className="inventory-header">
+              <h3>Branch Inventory</h3>
+              <p>Current stock levels for {adminName}</p>
+            </div>
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {products.length === 0 ? (
+                  <tr>
+                    <td colSpan="4">No products found for this branch.</td>
+                  </tr>
+                ) : (
+                  products.filter(p => p.quantity > 0).map((p) => (
+                    <tr key={p.id}>
+                      <td>{p.name}</td>
+                      <td>{formatCurrency(p.price, t.locale, t.currency)}</td>
+                      <td>{p.quantity} {p.unit}</td>
+                      <td>
+                        <span className={`status-badge ${p.inStock ? "status-success" : "status-error"}`}>
+                          {p.inStock ? "In Stock" : "Out of Stock"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+
+            <h3 style={{ marginTop: '2rem' }}>Add New Product</h3>
             <form onSubmit={handleAddProduct} className="admin-form">
               <input
                 type="text"

@@ -281,7 +281,6 @@ const paymentMethods = ["momo", "cash", "card"];
 const sortOptions = ["name", "price-asc", "price-desc"];
 const HF_MODEL = import.meta.env.VITE_HF_MODEL || "CohereLabs/aya-expanse-8b";
 const HF_TOKEN = import.meta.env.VITE_HF_TOKEN;
-const STORE_LOCATION = { lat: -1.9706, lng: 30.1044 };
 const DELIVERY_PROVIDERS = [
   { id: "vuba-vuba", name: "Vuba Vuba", baseFee: 700 },
   { id: "tuma250", name: "Tuma250", baseFee: 500 },
@@ -320,19 +319,6 @@ function resolveProductImage(product) {
   const override = productImageOverrides.find((entry) => entry.test.test(product.name));
   if (override) return override.image;
   return categoryImages[product.category] || product.image;
-}
-
-function haversineKm(from, to) {
-  if (!from || !to) return 0;
-  const toRad = (value) => (value * Math.PI) / 180;
-  const earthRadiusKm = 6371;
-  const dLat = toRad(to.lat - from.lat);
-  const dLng = toRad(to.lng - from.lng);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(from.lat)) * Math.cos(toRad(to.lat)) * Math.sin(dLng / 2) ** 2;
-
-  return earthRadiusKm * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 function tokenize(value) {
@@ -511,7 +497,11 @@ function App() {
 
   // New States
   const [products, setProducts] = useState([]);
-  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [branches, setBranches] = useState([]);
+  const [selectedBranch, setSelectedBranch] = usePersistentState("simba-selected-branch", null);
   const [view, setView] = useState("home"); // home, profile, admin, tracking
   const [activeOrder, setActiveOrder] = useState(null);
   const [loggedInPhone, setLoggedInPhone] = usePersistentState(STORAGE_KEYS.loggedInPhone, null);
@@ -522,17 +512,33 @@ function App() {
   const [adminDisplayName, setAdminDisplayName] = useState("");
 
   useEffect(() => {
-    fetch("/api/products")
+    fetch("/api/branches")
+      .then(res => res.json())
+      .then(data => setBranches(data || []))
+      .catch(err => console.error("Failed to load branches:", err));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedBranch && view === "home") {
+      setProductsLoading(false);
+      return;
+    }
+    
+    setProductsLoading(true);
+    const branchQuery = selectedBranch ? `branchId=${selectedBranch.id}` : "";
+    const url = `/api/products?${branchQuery}&page=${currentPage}&limit=25`;
+    fetch(url)
       .then(res => res.json())
       .then(data => {
         setProducts(data.products || []);
+        setPagination(data.pagination || { page: 1, totalPages: 1, total: 0 });
         setProductsLoading(false);
       })
       .catch(err => {
         console.error("Failed to load products:", err);
         setProductsLoading(false);
       });
-  }, []);
+  }, [selectedBranch, view, currentPage]);
 
   const normalizeProducts = useMemo(() => {
     return products.map((product) => ({
@@ -664,11 +670,9 @@ function App() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
-  const deliveryDistanceKm = form.location ? haversineKm(STORE_LOCATION, form.location) : 0;
   const deliveryOptions = DELIVERY_PROVIDERS.map((provider) => ({
     ...provider,
-    distanceKm: deliveryDistanceKm,
-    fee: Math.round(provider.baseFee + deliveryDistanceKm * 100),
+    fee: provider.baseFee,
   }));
   const selectedDelivery =
     deliveryOptions.find((option) => option.id === form.deliveryProvider) || deliveryOptions[0];
@@ -726,6 +730,7 @@ function App() {
     setCategory(nextCategory);
     setSelectedProductId(null);
     setSearch("");
+    setCurrentPage(1);
     updateQuery({
       category: nextCategory === "All" ? null : nextCategory,
       product: null,
@@ -745,7 +750,6 @@ function App() {
       form.fullname.trim() &&
       form.phone.trim() &&
       form.address.trim() &&
-      form.location &&
       form.deliveryProvider,
     );
   }
@@ -775,11 +779,6 @@ function App() {
   }, []);
 
   async function submitOrder() {
-    if (!form.location) {
-      setRecommendationError(t.locationMissing);
-      return;
-    }
-
     setOrderStatus("saving");
     setRecommendationError("");
 
@@ -790,6 +789,7 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          branchId: selectedBranch?.id,
           customer: form,
           subtotal,
           deliveryFee: selectedDelivery?.fee || 0,
@@ -887,24 +887,36 @@ function App() {
     recognition.start();
   }
 
-  function handleAdminLogin(event) {
+  async function handleAdminLogin(event) {
     event.preventDefault();
     const name = adminName.trim();
 
     if (!name) {
-      setAdminError("Enter your name to continue.");
+      setAdminError("Enter branch name to continue.");
       return;
     }
 
-    if (adminCode !== ADMIN_SECRET) {
-      setAdminError("Invalid admin secret code.");
-      return;
-    }
+    try {
+      const response = await fetch("/api/branch-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, secret: adminCode })
+      });
 
-    setAdminAuthorized(true);
-    setAdminDisplayName(name);
-    setAdminCode("");
-    setAdminError("");
+      if (!response.ok) {
+        throw new Error("Invalid branch name or secret.");
+      }
+
+      const branch = await response.json();
+      setAdminAuthorized(true);
+      setAdminDisplayName(branch.name);
+      setAdminCode("");
+      setAdminError("");
+      // Store branch info in admin state
+      localStorage.setItem("simba-admin-branch", JSON.stringify(branch));
+    } catch (err) {
+      setAdminError(err.message);
+    }
   }
 
   function handleAdminLogout() {
@@ -923,9 +935,14 @@ function App() {
       <header className="topbar">
         <div>
           <p className="eyebrow" style={{ cursor: 'pointer' }} onClick={() => window.location.hash = ''}>Simba Supermarket</p>
-          <h1 style={{ cursor: 'pointer' }} onClick={() => window.location.hash = ''}>{t.tagline}</h1>
+          <h1 style={{ cursor: 'pointer' }} onClick={() => window.location.hash = ''}>
+            {t.tagline} {selectedBranch ? ` - ${selectedBranch.name}` : ""}
+          </h1>
         </div>
         <div className="topbar-actions">
+          {selectedBranch && (
+            <button className="ghost-button" onClick={() => setSelectedBranch(null)}>Change Branch</button>
+          )}
           <button className="ghost-button" onClick={() => window.location.hash = 'admin'}>Admin</button>
           {loggedInPhone && (
             <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>Profile</button>
@@ -952,7 +969,7 @@ function App() {
       </header>
 
       <main className="page">
-        {productsLoading ? (
+        {(productsLoading && selectedBranch) ? (
           <div className="card" style={{ textAlign: "center", padding: "4rem" }}>
             <h2>Loading inventory...</h2>
           </div>
@@ -964,13 +981,14 @@ function App() {
                   onBack={() => window.location.hash = ""}
                   onLogout={handleAdminLogout}
                   adminName={adminDisplayName}
+                  branchId={JSON.parse(localStorage.getItem("simba-admin-branch"))?.id}
                   t={t}
                   formatCurrency={formatCurrency}
                 />
               ) : (
                 <section className="admin-auth card">
-                  <h2>Admin Access</h2>
-                  <p>Enter your name and secret code to open the admin portal.</p>
+                  <h2>Branch Management</h2>
+                  <p>Enter branch name and secret code (e.g., Downtown / Downtown2026)</p>
                   <form className="admin-auth-form" onSubmit={handleAdminLogin}>
                     <input
                       type="text"
@@ -1018,262 +1036,311 @@ function App() {
             )}
 
             {view === "home" && (
-              <>
-                <section className="hero">
-                  <div className="hero-copy">
-                    <span className="pill">{t.heroBadge}</span>
-                    <h2>{t.heroTitle}</h2>
-                    <p>{t.heroText}</p>
-                    <div className="hero-search">
-                      <input
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder={t.searchPlaceholder}
-                      />
-                      <div className="hero-search-actions">
-                        <button onClick={() => document.getElementById("catalogue")?.scrollIntoView()}>
-                          {t.discover}
-                        </button>
-                        <button
-                          className="secondary-button"
-                          onClick={handleSpeechSearch}
-                          disabled={!speechSupported || speechListening}
-                        >
-                          {speechListening ? t.speechListening : t.speechSearch}
-                        </button>
-                      </div>
-                    </div>
-                    <p className="hero-meta">{t.deliveryPromise}</p>
+              !selectedBranch ? (
+                <section className="branch-selection card">
+                  <div className="section-heading">
+                    <h3>Select a Branch</h3>
+                    <p>Choose a Simba branch near you to see available inventory.</p>
                   </div>
-                  <div
-                    className="hero-card"
-                    style={{ backgroundImage: `linear-gradient(180deg, transparent, rgba(12,16,28,0.82)), url(${heroCategory?.image})` }}
-                  >
-                    <span>{t.categorySpotlight}</span>
-                    <strong>{heroCategory?.name}</strong>
-                    <small>
-                      {heroCategory?.count} {t.items}
-                    </small>
+                  <div className="branch-grid">
+                    {branches.map(branch => (
+                      <button
+                        key={branch.id}
+                        className="branch-card"
+                        onClick={() => setSelectedBranch(branch)}
+                      >
+                        <strong>{branch.name}</strong>
+                        <span>{branch.location}</span>
+                      </button>
+                    ))}
                   </div>
                 </section>
-
-                <section className="recommendation-panel recommendation-panel-feature">
-                  <div className="section-heading">
-                    <div>
-                      <span className="recommendation-kicker">Gasuku picks</span>
-                      <h3>Feel-based recommendations</h3>
+              ) : (
+                <>
+                  <section className="hero">
+                    <div className="hero-copy">
+                      <span className="pill">{t.heroBadge}</span>
+                      <h2>{t.heroTitle}</h2>
+                      <p>{t.heroText}</p>
+                      <div className="hero-search">
+                        <input
+                          value={search}
+                          onChange={(event) => {
+                            setSearch(event.target.value);
+                            setCurrentPage(1);
+                          }}
+                          placeholder={t.searchPlaceholder}
+                        />
+                        <div className="hero-search-actions">
+                          <button onClick={() => document.getElementById("catalogue")?.scrollIntoView()}>
+                            {t.discover}
+                          </button>
+                          <button
+                            className="secondary-button"
+                            onClick={handleSpeechSearch}
+                            disabled={!speechSupported || speechListening}
+                          >
+                            {speechListening ? t.speechListening : t.speechSearch}
+                          </button>
+                        </div>
+                      </div>
+                      <p className="hero-meta">{t.deliveryPromise}</p>
                     </div>
-                    <p>
-                      Describe your mood or need and Gasuku will rank real products from the dataset.
-                    </p>
-                  </div>
-                  <div className="recommendation-controls recommendation-controls-feature">
-                    <input
-                      value={feeling}
-                      onChange={(event) => setFeeling(event.target.value)}
-                      placeholder="I feel tired and need a quick study boost"
-                    />
-                    <button onClick={handleRecommend} disabled={recommendationLoading}>
-                      {recommendationLoading ? "Thinking..." : "Get recommendations"}
-                    </button>
-                  </div>
-                  {recommendationIntro ? <p className="hero-meta">{recommendationIntro}</p> : null}
-                  {recommendationSource ? (
-                    <p className="hero-meta">
-                      Source: {recommendationSource === "fallback" ? "Local fallback" : `Gasuku via ${HF_MODEL}`}
-                    </p>
-                  ) : null}
-                  {recommendationError ? <p className="error-text">{recommendationError}</p> : null}
-                  {recommendationProducts.length > 0 ? (
-                    <div className="recommendation-grid">
-                      {recommendationProducts.map((product) => (
-                        <article className="mini-card recommendation-card" key={product.id}>
-                          <img src={resolveProductImage(product)} alt={product.name} />
-                          <div className="mini-card-body">
-                            <p className="product-category">{product.category}</p>
-                            <button onClick={() => openProduct(product)}>{product.name}</button>
-                            <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
-                            <p className="recommendation-reason">{product.recommendationReason}</p>
-                            <div className="recommendation-actions">
+                    <div
+                      className="hero-card"
+                      style={{ backgroundImage: `linear-gradient(180deg, transparent, rgba(12,16,28,0.82)), url(${heroCategory?.image})` }}
+                    >
+                      <span>{t.categorySpotlight}</span>
+                      <strong>{heroCategory?.name}</strong>
+                      <small>
+                        {heroCategory?.count} {t.items}
+                      </small>
+                    </div>
+                  </section>
+
+                  <section className="recommendation-panel recommendation-panel-feature">
+                    <div className="section-heading">
+                      <div>
+                        <span className="recommendation-kicker">Gasuku picks</span>
+                        <h3>Feel-based recommendations</h3>
+                      </div>
+                      <p>
+                        Describe your mood or need and Gasuku will rank real products from the dataset.
+                      </p>
+                    </div>
+                    <div className="recommendation-controls recommendation-controls-feature">
+                      <input
+                        value={feeling}
+                        onChange={(event) => setFeeling(event.target.value)}
+                        placeholder="I feel tired and need a quick study boost"
+                      />
+                      <button onClick={handleRecommend} disabled={recommendationLoading}>
+                        {recommendationLoading ? "Thinking..." : "Get recommendations"}
+                      </button>
+                    </div>
+                    {recommendationIntro ? <p className="hero-meta">{recommendationIntro}</p> : null}
+                    {recommendationSource ? (
+                      <p className="hero-meta">
+                        Source: {recommendationSource === "fallback" ? "Local fallback" : `Gasuku via ${HF_MODEL}`}
+                      </p>
+                    ) : null}
+                    {recommendationError ? <p className="error-text">{recommendationError}</p> : null}
+                    {recommendationProducts.length > 0 ? (
+                      <div className="recommendation-grid">
+                        {recommendationProducts.map((product) => (
+                          <article className="mini-card recommendation-card" key={product.id}>
+                            <img src={resolveProductImage(product)} alt={product.name} />
+                            <div className="mini-card-body">
+                              <p className="product-category">{product.category}</p>
+                              <button onClick={() => openProduct(product)}>{product.name}</button>
+                              <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
+                              <p className="recommendation-reason">{product.recommendationReason}</p>
+                              <div className="recommendation-actions">
+                                <button className="secondary-button" onClick={() => openProduct(product)}>
+                                  {t.viewDetails}
+                                </button>
+                                <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
+                              </div>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    ) : null}
+                  </section>
+
+                  <section className="categories-panel">
+                    <div className="section-heading">
+                      <h3>{t.categories}</h3>
+                      <p>
+                        {filteredProducts.length} {t.searchResults}
+                      </p>
+                    </div>
+                    <div className="category-strip">
+                      {featuredCategories.map((item) => (
+                        <button
+                          key={item.name}
+                          className={item.name === category ? "category-card active" : "category-card"}
+                          onClick={() => selectCategory(item.name)}
+                          style={{ backgroundImage: `linear-gradient(180deg, rgba(10,17,28,0.15), rgba(10,17,28,0.78)), url(${item.image})` }}
+                        >
+                          <span>{item.count}</span>
+                          <strong>{item.name}</strong>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="controls" id="catalogue">
+                    <div className="section-heading">
+                      <h3>{t.discover}</h3>
+                      <p>{t.featured}</p>
+                    </div>
+                    <div className="filters">
+                      <select
+                        value={category}
+                        onChange={(event) => selectCategory(event.target.value)}
+                      >
+                        <option value="All">{t.allCategories}</option>
+                        {categories
+                          .filter((item) => item !== "All")
+                          .map((item) => (
+                            <option key={item} value={item}>
+                              {item}
+                            </option>
+                          ))}
+                      </select>
+                      <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                        {sortOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option === "name"
+                              ? t.nameAZ
+                              : option === "price-asc"
+                                ? t.cheapest
+                                : t.priciest}
+                          </option>
+                        ))}
+                      </select>
+                      <label className="toggle">
+                        <input
+                          type="checkbox"
+                          checked={stockOnly}
+                          onChange={(event) => setStockOnly(event.target.checked)}
+                        />
+                        {t.inStockOnly}
+                      </label>
+                      <button
+                        className="ghost-button"
+                        onClick={() => {
+                          setCategory("All");
+                          setSearch("");
+                          setStockOnly(false);
+                          setSortBy("name");
+                          updateQuery({ category: null, product: null });
+                        }}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </section>
+
+                  {!selectedProduct ? (
+                    <>
+                      <section className="product-grid">
+                        {filteredProducts.map((product) => (
+                          <article className="product-card" key={product.id}>
+                            <button className="product-image" onClick={() => openProduct(product)}>
+                              <img src={resolveProductImage(product)} alt={product.name} loading="lazy" />
+                            </button>
+                            <div className="product-body">
+                              <p className="product-category">{product.category}</p>
+                              <button className="product-name" onClick={() => openProduct(product)}>
+                                {product.name}
+                              </button>
+                              <div className="product-meta">
+                                <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
+                                <small>
+                                  {product.quantity} {product.unit} available
+                                </small>
+                              </div>
+                            </div>
+                            <div className="product-actions">
                               <button className="secondary-button" onClick={() => openProduct(product)}>
                                 {t.viewDetails}
                               </button>
                               <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
                             </div>
-                          </div>
-                        </article>
-                      ))}
-                    </div>
-                  ) : null}
-                </section>
-
-                <section className="categories-panel">
-                  <div className="section-heading">
-                    <h3>{t.categories}</h3>
-                    <p>
-                      {filteredProducts.length} {t.searchResults}
-                    </p>
-                  </div>
-                  <div className="category-strip">
-                    {featuredCategories.map((item) => (
-                      <button
-                        key={item.name}
-                        className={item.name === category ? "category-card active" : "category-card"}
-                        onClick={() => selectCategory(item.name)}
-                        style={{ backgroundImage: `linear-gradient(180deg, rgba(10,17,28,0.15), rgba(10,17,28,0.78)), url(${item.image})` }}
-                      >
-                        <span>{item.count}</span>
-                        <strong>{item.name}</strong>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-
-                <section className="controls" id="catalogue">
-                  <div className="section-heading">
-                    <h3>{t.discover}</h3>
-                    <p>{t.featured}</p>
-                  </div>
-                  <div className="filters">
-                    <select
-                      value={category}
-                      onChange={(event) => selectCategory(event.target.value)}
-                    >
-                      <option value="All">{t.allCategories}</option>
-                      {categories
-                        .filter((item) => item !== "All")
-                        .map((item) => (
-                          <option key={item} value={item}>
-                            {item}
-                          </option>
-                        ))}
-                    </select>
-                    <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
-                      {sortOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option === "name"
-                            ? t.nameAZ
-                            : option === "price-asc"
-                              ? t.cheapest
-                              : t.priciest}
-                        </option>
-                      ))}
-                    </select>
-                    <label className="toggle">
-                      <input
-                        type="checkbox"
-                        checked={stockOnly}
-                        onChange={(event) => setStockOnly(event.target.checked)}
-                      />
-                      {t.inStockOnly}
-                    </label>
-                    <button
-                      className="ghost-button"
-                      onClick={() => {
-                        setCategory("All");
-                        setSearch("");
-                        setStockOnly(false);
-                        setSortBy("name");
-                        updateQuery({ category: null, product: null });
-                      }}
-                    >
-                      Reset
-                    </button>
-                  </div>
-                </section>
-
-                {!selectedProduct ? (
-                  <section className="product-grid">
-                    {filteredProducts.map((product) => (
-                      <article className="product-card" key={product.id}>
-                        <button className="product-image" onClick={() => openProduct(product)}>
-                          <img src={resolveProductImage(product)} alt={product.name} loading="lazy" />
-                        </button>
-                        <div className="product-body">
-                          <p className="product-category">{product.category}</p>
-                          <button className="product-name" onClick={() => openProduct(product)}>
-                            {product.name}
-                          </button>
-                          <div className="product-meta">
-                            <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
-                            <small>
-                              {t.per} {product.unit}
-                            </small>
-                          </div>
-                        </div>
-                        <div className="product-actions">
-                          <button className="secondary-button" onClick={() => openProduct(product)}>
-                            {t.viewDetails}
-                          </button>
-                          <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
-                        </div>
-                      </article>
-                    ))}
-                  </section>
-                ) : (
-                  <section className="detail-layout">
-                    <button className="back-link" onClick={closeProduct}>
-                      {t.detailBack}
-                    </button>
-                    <div className="detail-card">
-                      <div className="detail-image-wrap">
-                        <img src={resolveProductImage(selectedProduct)} alt={selectedProduct.name} />
-                      </div>
-                      <div className="detail-copy">
-                        <p className="product-category">{selectedProduct.category}</p>
-                        <h3>{selectedProduct.name}</h3>
-                        <strong>
-                          {formatCurrency(selectedProduct.price, t.locale, t.currency)}
-                        </strong>
-                        <p>{t.paymentHint}</p>
-                        {/placehold\.co/i.test(selectedProduct.image) ? (
-                          <p className="hero-meta">Using a curated Unsplash fallback matched to the product title.</p>
-                        ) : null}
-                        <dl className="detail-specs">
-                          <div>
-                            <dt>{t.unit}</dt>
-                            <dd>{selectedProduct.unit}</dd>
-                          </div>
-                          <div>
-                            <dt>Location</dt>
-                            <dd>{selectedProduct.location || "Main warehouse"}</dd>
-                          </div>
-                          <div>
-                            <dt>Status</dt>
-                            <dd>{selectedProduct.inStock ? "In stock" : "Unavailable"}</dd>
-                          </div>
-                          <div>
-                            <dt>ID</dt>
-                            <dd>#{selectedProduct.id}</dd>
-                          </div>
-                        </dl>
-                        <div className="detail-actions">
-                          <button onClick={() => addToCart(selectedProduct.id)}>{t.quickAdd}</button>
-                          <button className="secondary-button" onClick={() => setCartOpen(true)}>
-                            {t.cart}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="related-section">
-                      <div className="section-heading">
-                        <h3>{t.relatedProducts}</h3>
-                        <p>{t.productInfo}</p>
-                      </div>
-                      <div className="related-grid">
-                        {relatedProducts.map((product) => (
-                          <article className="mini-card" key={product.id}>
-                            <img src={resolveProductImage(product)} alt={product.name} />
-                            <button onClick={() => openProduct(product)}>{product.name}</button>
-                            <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
                           </article>
                         ))}
+                      </section>
+                      {pagination.totalPages > 1 && (
+                        <div className="pagination-controls">
+                          <button 
+                            disabled={currentPage === 1} 
+                            onClick={() => {
+                              setCurrentPage(p => Math.max(1, p - 1));
+                              window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
+                            }}
+                          >
+                            Previous
+                          </button>
+                          <span>Page {currentPage} of {pagination.totalPages}</span>
+                          <button 
+                            disabled={currentPage === pagination.totalPages} 
+                            onClick={() => {
+                              setCurrentPage(p => Math.min(pagination.totalPages, p + 1));
+                              window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
+                            }}
+                          >
+                            Next
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <section className="detail-layout">
+                      <button className="back-link" onClick={closeProduct}>
+                        {t.detailBack}
+                      </button>
+                      <div className="detail-card">
+                        <div className="detail-image-wrap">
+                          <img src={resolveProductImage(selectedProduct)} alt={selectedProduct.name} />
+                        </div>
+                        <div className="detail-copy">
+                          <p className="product-category">{selectedProduct.category}</p>
+                          <h3>{selectedProduct.name}</h3>
+                          <strong>
+                            {formatCurrency(selectedProduct.price, t.locale, t.currency)}
+                          </strong>
+                          <p>{t.paymentHint}</p>
+                          {/placehold\.co/i.test(selectedProduct.image) ? (
+                            <p className="hero-meta">Using a curated Unsplash fallback matched to the product title.</p>
+                          ) : null}
+                          <dl className="detail-specs">
+                            <div>
+                              <dt>Quantity</dt>
+                              <dd>{selectedProduct.quantity} {selectedProduct.unit}</dd>
+                            </div>
+                            <div>
+                              <dt>Branch</dt>
+                              <dd>{selectedBranch.name}</dd>
+                            </div>
+                            <div>
+                              <dt>Status</dt>
+                              <dd>{selectedProduct.inStock ? "In stock" : "Unavailable"}</dd>
+                            </div>
+                            <div>
+                              <dt>ID</dt>
+                              <dd>#{selectedProduct.id}</dd>
+                            </div>
+                          </dl>
+                          <div className="detail-actions">
+                            <button onClick={() => addToCart(selectedProduct.id)}>{t.quickAdd}</button>
+                            <button className="secondary-button" onClick={() => setCartOpen(true)}>
+                              {t.cart}
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </section>
-                )}
-              </>
+
+                      <div className="related-section">
+                        <div className="section-heading">
+                          <h3>{t.relatedProducts}</h3>
+                          <p>{t.productInfo}</p>
+                        </div>
+                        <div className="related-grid">
+                          {relatedProducts.map((product) => (
+                            <article className="mini-card" key={product.id}>
+                              <img src={resolveProductImage(product)} alt={product.name} />
+                              <button onClick={() => openProduct(product)}>{product.name}</button>
+                              <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
+                            </article>
+                          ))}
+                        </div>
+                      </div>
+                    </section>
+                  )}
+                </>
+              )
             )}
           </>
         )}

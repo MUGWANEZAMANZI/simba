@@ -1,5 +1,3 @@
-import GoogleMapPicker from "./GoogleMapPicker";
-
 export default function CartDrawer({
   cartOpen,
   setCartOpen,
@@ -119,35 +117,20 @@ export default function CartDrawer({
                     </option>
                   ))}
                 </select>
-                <p className="hero-meta">{t.locationPicker}</p>
-                <GoogleMapPicker
-                  value={form.location}
-                  onChange={(location) => setForm((current) => ({ ...current, location }))}
-                />
-                {form.location ? (
-                  <>
-                    <p className="hero-meta">
-                      {t.chooseLocation}: {form.location.lat}, {form.location.lng}
-                    </p>
-                    <div className="delivery-options">
-                      {deliveryOptions.map((option) => (
-                        <button
-                          key={option.id}
-                          type="button"
-                          className={form.deliveryProvider === option.id ? "payment-pill active" : "payment-pill"}
-                          onClick={() =>
-                            setForm((current) => ({ ...current, deliveryProvider: option.id }))
-                          }
-                        >
-                          {option.name}: {formatCurrency(option.fee, t.locale, t.currency)}
-                        </button>
-                      ))}
-                      <p className="hero-meta">
-                        {deliveryDistanceKm.toFixed(2)} km from Simba Kicukiro at 100 RWF/km
-                      </p>
-                    </div>
-                  </>
-                ) : null}
+                <div className="delivery-options">
+                  {deliveryOptions.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      className={form.deliveryProvider === option.id ? "payment-pill active" : "payment-pill"}
+                      onClick={() =>
+                        setForm((current) => ({ ...current, deliveryProvider: option.id }))
+                      }
+                    >
+                      {option.name}: {formatCurrency(option.fee, t.locale, t.currency)}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -172,7 +155,6 @@ export default function CartDrawer({
                 <p>{form.phone || "-"}</p>
                 <p>{form.address || "-"}</p>
                 <p>{form.district}</p>
-                <p>{form.location ? `${form.location.lat}, ${form.location.lng}` : t.locationMissing}</p>
                 <p>
                   Delivery: {selectedDelivery?.name} - {formatCurrency(selectedDelivery?.fee || 0, t.locale, t.currency)}
                 </p>

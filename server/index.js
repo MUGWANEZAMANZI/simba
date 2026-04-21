@@ -27,8 +27,24 @@ db.exec(`
     last_order_at TEXT NOT NULL
   );
 
+  CREATE TABLE IF NOT EXISTS branches (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    location TEXT NOT NULL,
+    admin_secret TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS inventory (
+    branch_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (branch_id, product_id),
+    FOREIGN KEY (branch_id) REFERENCES branches(id)
+  );
+
   CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    branch_id INTEGER,
     customer_name TEXT NOT NULL,
     phone TEXT NOT NULL,
     address TEXT NOT NULL,
@@ -42,9 +58,45 @@ db.exec(`
     subtotal REAL NOT NULL,
     total REAL NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
-    created_at TEXT NOT NULL
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (branch_id) REFERENCES branches(id)
   );
 `);
+
+// Migration: Add branch_id to orders if it's an old DB
+try {
+  const columns = db.prepare("PRAGMA table_info(orders)").all();
+  if (!columns.some(c => c.name === "branch_id")) {
+    db.exec("ALTER TABLE orders ADD COLUMN branch_id INTEGER REFERENCES branches(id)");
+    console.log("Migration: Added branch_id column to orders table.");
+  }
+} catch (err) {
+  console.error("Migration failed:", err);
+}
+
+// Seed branches if empty
+const branchesCount = db.prepare("SELECT COUNT(*) as count FROM branches").get().count;
+if (branchesCount === 0) {
+  const insertBranch = db.prepare("INSERT INTO branches (name, location, admin_secret) VALUES (?, ?, ?)");
+  insertBranch.run("Downtown", "Kigali City Center", "Downtown2026");
+  insertBranch.run("Kimironko", "Kimironko Market Area", "Kimironko2026");
+  insertBranch.run("Gikondo", "Gikondo Industrial Park", "Gikondo2026");
+  
+  // Seed inventory for a few products for demo
+  try {
+    const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
+    const products = data.products.slice(0, 50); // Seed inventory for first 50 products
+    const insertInventory = db.prepare("INSERT INTO inventory (branch_id, product_id, quantity) VALUES (?, ?, ?)");
+    
+    [1, 2, 3].forEach(branchId => {
+      products.forEach(p => {
+        insertInventory.run(branchId, p.id, Math.floor(Math.random() * 50) + 10);
+      });
+    });
+  } catch (err) {
+    console.error("Failed to seed inventory:", err);
+  }
+}
 
 const upsertAccount = db.prepare(`
   INSERT INTO accounts (
@@ -63,10 +115,10 @@ const upsertAccount = db.prepare(`
 
 const insertOrder = db.prepare(`
   INSERT INTO orders (
-    customer_name, phone, address, district, payment_method,
+    branch_id, customer_name, phone, address, district, payment_method,
     delivery_provider, delivery_fee, latitude, longitude, items_json, subtotal, total, created_at
   ) VALUES (
-    @customer_name, @phone, @address, @district, @payment_method,
+    @branch_id, @customer_name, @phone, @address, @district, @payment_method,
     @delivery_provider, @delivery_fee, @latitude, @longitude, @items_json, @subtotal, @total, @created_at
   )
 `);
@@ -74,11 +126,62 @@ const insertOrder = db.prepare(`
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 
+// Branches API
+app.get("/api/branches", (req, res) => {
+  try {
+    const branches = db.prepare("SELECT id, name, location FROM branches").all();
+    res.json(branches);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch branches." });
+  }
+});
+
+// Branch Representative Login
+app.post("/api/branch-login", (req, res) => {
+  const { name, secret } = req.body;
+  const branch = db.prepare("SELECT * FROM branches WHERE name = ? AND admin_secret = ?").get(name, secret);
+  if (branch) {
+    res.json({ id: branch.id, name: branch.name, location: branch.location });
+  } else {
+    res.status(401).json({ error: "Invalid credentials." });
+  }
+});
+
 // Products API
 app.get("/api/products", (req, res) => {
+  const { branchId, page = 1, limit = 25 } = req.query;
+  const pageNum = parseInt(page);
+  const limitNum = parseInt(limit);
+  const offset = (pageNum - 1) * limitNum;
+
   try {
     const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
-    res.json(data);
+    let products = data.products;
+
+    if (branchId) {
+      const inventory = db.prepare("SELECT product_id, quantity FROM inventory WHERE branch_id = ?").all(branchId);
+      const inventoryMap = Object.fromEntries(inventory.map(i => [i.product_id, i.quantity]));
+      
+      products = products.map(p => ({
+        ...p,
+        quantity: inventoryMap[p.id] || 0,
+        inStock: (inventoryMap[p.id] || 0) > 0
+      }));
+    }
+
+    const totalProducts = products.length;
+    const paginatedProducts = products.slice(offset, offset + limitNum);
+
+    res.json({ 
+      ...data, 
+      products: paginatedProducts,
+      pagination: {
+        total: totalProducts,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(totalProducts / limitNum)
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to read products file." });
   }
@@ -113,7 +216,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.post("/api/orders", (req, res) => {
-  const { customer, items, subtotal, deliveryFee, total } = req.body || {};
+  const { branchId, customer, items, subtotal, deliveryFee, total } = req.body || {};
 
   if (!customer?.fullname || !customer?.phone || !customer?.address || !customer?.district) {
     return res.status(400).json({ error: "Missing customer details." });
@@ -136,6 +239,7 @@ app.post("/api/orders", (req, res) => {
   });
 
   const result = insertOrder.run({
+    branch_id: branchId || null,
     customer_name: customer.fullname,
     phone: customer.phone,
     address: customer.address,
@@ -152,6 +256,18 @@ app.post("/api/orders", (req, res) => {
   });
 
   const orderId = result.lastInsertRowid;
+  
+  if (branchId) {
+    const updateInventory = db.prepare("UPDATE inventory SET quantity = quantity - ? WHERE branch_id = ? AND product_id = ?");
+    items.forEach(item => {
+      try {
+        updateInventory.run(item.quantity, branchId, item.id);
+      } catch (e) {
+        console.error("Inventory update failed:", e);
+      }
+    });
+  }
+
   const order = db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId);
 
   return res.status(201).json(order);
@@ -174,7 +290,13 @@ app.get("/api/admin/users", (req, res) => {
 });
 
 app.get("/api/admin/orders", (req, res) => {
-  const orders = db.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
+  const { branchId } = req.query;
+  let orders;
+  if (branchId) {
+    orders = db.prepare("SELECT * FROM orders WHERE branch_id = ? ORDER BY created_at DESC").all(branchId);
+  } else {
+    orders = db.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
+  }
   res.json(orders);
 });
 
