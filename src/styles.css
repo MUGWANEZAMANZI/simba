@@ -660,8 +660,11 @@ img {
 }
 
 .status-pending { background: #ffe0c4; color: #c55517; }
+.status-assigned { background: #ede9fe; color: #6d28d9; }
+.status-picked { background: #dbeafe; color: #1d4ed8; }
 .status-delivering { background: #e0f2fe; color: #0369a1; }
 .status-delivered { background: #dcfce7; color: #15803d; }
+.status-cancelled { background: #fee2e2; color: #b91c1c; }
 
 /* User Profile */
 .user-profile { margin-top: 1rem; }
@@ -692,6 +695,29 @@ img {
 .admin-auth-form { display: grid; gap: 0.85rem; margin-top: 1rem; }
 .admin-auth-actions { display: flex; gap: 0.75rem; align-items: center; }
 .admin-auth-error { color: #b91c1c; font-weight: 600; margin: 0; }
+
+.delivery-stats-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.delivery-stat-card {
+  display: grid;
+  gap: 0.35rem;
+  align-content: center;
+  min-height: 95px;
+  text-align: center;
+}
+
+.delivery-stat-card strong {
+  font-size: 1.6rem;
+  color: var(--accent);
+}
+
+.delivery-orders-wrap {
+  margin-top: 1rem;
+}
 
 
 @media (min-width: 980px) {

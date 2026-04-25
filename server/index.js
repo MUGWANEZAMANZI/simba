@@ -123,6 +123,10 @@ try {
     db.exec("ALTER TABLE orders ADD COLUMN branch_id INTEGER REFERENCES branches(id)");
     console.log("Migration: Added branch_id column to orders table.");
   }
+  if (!columns.some(c => c.name === "delivery_owner")) {
+    db.exec("ALTER TABLE orders ADD COLUMN delivery_owner TEXT");
+    console.log("Migration: Added delivery_owner column to orders table.");
+  }
 } catch (err) {
   console.error("Migration failed:", err);
 }
@@ -360,6 +364,81 @@ app.get("/api/admin/orders", (req, res) => {
     orders = db.prepare("SELECT * FROM orders ORDER BY created_at DESC").all();
   }
   res.json(orders);
+});
+
+app.patch("/api/admin/orders/:id/status", (req, res) => {
+  const orderId = Number(req.params.id);
+  const { status, delivery_owner } = req.body || {};
+
+  if (!orderId || !status) {
+    return res.status(400).json({ error: "Order id and status are required." });
+  }
+
+  const update = db.prepare(
+    "UPDATE orders SET status = ?, delivery_owner = COALESCE(?, delivery_owner) WHERE id = ?",
+  );
+  const result = update.run(String(status), delivery_owner || null, orderId);
+
+  if (!result.changes) {
+    return res.status(404).json({ error: "Order not found." });
+  }
+
+  const updated = db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId);
+  return res.json(updated);
+});
+
+app.get("/api/delivery/orders", (req, res) => {
+  const { provider, owner, status } = req.query;
+
+  if (!provider) {
+    return res.status(400).json({ error: "provider query parameter is required." });
+  }
+
+  const clauses = ["delivery_provider = ?"];
+  const values = [String(provider)];
+
+  if (owner) {
+    clauses.push("(delivery_owner = ? OR delivery_owner IS NULL)");
+    values.push(String(owner));
+  }
+
+  if (status) {
+    clauses.push("status = ?");
+    values.push(String(status));
+  }
+
+  const whereClause = clauses.join(" AND ");
+  const orders = db
+    .prepare(`SELECT * FROM orders WHERE ${whereClause} ORDER BY created_at DESC`)
+    .all(...values);
+
+  return res.json(orders);
+});
+
+app.patch("/api/delivery/orders/:id", (req, res) => {
+  const orderId = Number(req.params.id);
+  const { status, owner } = req.body || {};
+
+  if (!orderId || !status || !owner) {
+    return res.status(400).json({ error: "Order id, status and owner are required." });
+  }
+
+  const allowedStatuses = ["pending", "assigned", "picked", "delivering", "delivered", "cancelled"];
+  if (!allowedStatuses.includes(String(status))) {
+    return res.status(400).json({ error: "Invalid delivery status." });
+  }
+
+  const update = db.prepare(
+    "UPDATE orders SET status = ?, delivery_owner = ? WHERE id = ?",
+  );
+  const result = update.run(String(status), String(owner), orderId);
+
+  if (!result.changes) {
+    return res.status(404).json({ error: "Order not found." });
+  }
+
+  const updated = db.prepare("SELECT * FROM orders WHERE id = ?").get(orderId);
+  return res.json(updated);
 });
 
 // Serve static files from the Vite build directory

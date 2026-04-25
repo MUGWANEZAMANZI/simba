@@ -1,3 +1,35 @@
+import { CircleMarker, MapContainer, TileLayer, useMapEvents } from "react-leaflet";
+
+function LocationPickerMap({ location, onPick }) {
+  const fallbackCenter = [-1.9441, 30.0619];
+  const center = location ? [location.lat, location.lng] : fallbackCenter;
+
+  function ClickHandler() {
+    useMapEvents({
+      click(event) {
+        onPick({
+          lat: Number(event.latlng.lat.toFixed(6)),
+          lng: Number(event.latlng.lng.toFixed(6)),
+        });
+      },
+    });
+    return null;
+  }
+
+  return (
+    <div className="google-map-picker">
+      <MapContainer center={center} zoom={12} style={{ height: "100%", width: "100%" }}>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <ClickHandler />
+        {location ? <CircleMarker center={[location.lat, location.lng]} radius={9} pathOptions={{ color: "#e17732" }} /> : null}
+      </MapContainer>
+    </div>
+  );
+}
+
 export default function CartDrawer({
   cartOpen,
   setCartOpen,
@@ -131,6 +163,18 @@ export default function CartDrawer({
                     </button>
                   ))}
                 </div>
+                <div>
+                  <p className="hero-meta">Pick delivery point on map (click anywhere)</p>
+                  <LocationPickerMap
+                    location={form.location}
+                    onPick={(location) => setForm((current) => ({ ...current, location }))}
+                  />
+                  <p className="hero-meta" style={{ marginTop: "0.5rem" }}>
+                    {form.location
+                      ? `Lat ${form.location.lat}, Lng ${form.location.lng}`
+                      : "No location selected yet."}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -158,6 +202,7 @@ export default function CartDrawer({
                 <p>
                   Delivery: {selectedDelivery?.name} - {formatCurrency(selectedDelivery?.fee || 0, t.locale, t.currency)}
                 </p>
+                <p>Distance: {deliveryDistanceKm} km</p>
                 <p>
                   {t.paymentMethod}: {form.paymentMethod === "momo" ? t.momo : form.paymentMethod === "cash" ? t.cash : t.card}
                 </p>
@@ -171,6 +216,7 @@ export default function CartDrawer({
                 <span className="checkout-total-line">
                   Delivery: {formatCurrency(selectedDelivery?.fee || 0, t.locale, t.currency)}
                 </span>
+                <span className="checkout-total-line">Distance: {deliveryDistanceKm} km</span>
                 <strong className="checkout-total-line">
                   Total: {formatCurrency(grandTotal, t.locale, t.currency)}
                 </strong>

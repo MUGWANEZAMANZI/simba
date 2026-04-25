@@ -3,6 +3,7 @@ import CartDrawer from "./components/CartDrawer";
 import UserProfile from "./components/UserProfile";
 import OrderTracker from "./components/OrderTracker";
 import AdminPortal from "./components/AdminPortal";
+import DeliveryPortal from "./components/DeliveryPortal";
 
 const ADMIN_SECRET = "NobOdyLikesMe";
 
@@ -605,6 +606,10 @@ function App() {
   const [adminError, setAdminError] = useState("");
   const [adminAuthorized, setAdminAuthorized] = useState(false);
   const [adminDisplayName, setAdminDisplayName] = useState("");
+  const [deliveryOwner, setDeliveryOwner] = useState("");
+  const [deliveryProviderLogin, setDeliveryProviderLogin] = useState("simba-express");
+  const [deliveryAuthorized, setDeliveryAuthorized] = useState(false);
+  const [deliveryError, setDeliveryError] = useState("");
 
   useEffect(() => {
     fetch("/api/branches")
@@ -849,7 +854,8 @@ function App() {
       form.fullname.trim() &&
       form.phone.trim() &&
       form.address.trim() &&
-      form.deliveryProvider,
+      form.deliveryProvider &&
+      form.location,
     );
   }
 
@@ -857,6 +863,7 @@ function App() {
     const handleHash = () => {
       const hash = window.location.hash.replace("#", "");
       if (hash === "admin") setView("admin");
+      else if (hash === "delivery") setView("delivery");
       else if (hash === "profile") setView("profile");
       else if (hash.startsWith("track-")) {
         const orderId = hash.split("-")[1];
@@ -1026,6 +1033,23 @@ function App() {
     window.location.hash = "";
   }
 
+  function handleDeliveryLogin(event) {
+    event.preventDefault();
+    if (!deliveryOwner.trim()) {
+      setDeliveryError("Enter delivery manager name to continue.");
+      return;
+    }
+    setDeliveryAuthorized(true);
+    setDeliveryError("");
+  }
+
+  function handleDeliveryLogout() {
+    setDeliveryAuthorized(false);
+    setDeliveryOwner("");
+    setDeliveryError("");
+    window.location.hash = "";
+  }
+
   const heroCategory =
     category === "All" ? featuredCategories[0] : featuredCategories.find((item) => item.name === category);
 
@@ -1043,6 +1067,7 @@ function App() {
             <button className="ghost-button" onClick={() => setSelectedBranch(null)}>Change Branch</button>
           )}
           <button className="ghost-button" onClick={() => window.location.hash = 'admin'}>Admin</button>
+          <button className="ghost-button" onClick={() => window.location.hash = 'delivery'}>Delivery</button>
           {loggedInPhone && (
             <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>Profile</button>
           )}
@@ -1132,6 +1157,52 @@ function App() {
                 order={activeOrder}
                 onBack={() => window.location.hash = "profile"}
               />
+            )}
+
+            {view === "delivery" && (
+              deliveryAuthorized ? (
+                <DeliveryPortal
+                  onBack={() => window.location.hash = ""}
+                  providerId={deliveryProviderLogin}
+                  providerLabel={
+                    DELIVERY_PROVIDERS.find((provider) => provider.id === deliveryProviderLogin)?.name ||
+                    deliveryProviderLogin
+                  }
+                  ownerName={deliveryOwner.trim()}
+                  t={t}
+                  formatCurrency={formatCurrency}
+                  onLogout={handleDeliveryLogout}
+                />
+              ) : (
+                <section className="admin-auth card">
+                  <h2>Delivery Company Portal</h2>
+                  <p>Login as delivery manager and manage the orders assigned to your company.</p>
+                  <form className="admin-auth-form" onSubmit={handleDeliveryLogin}>
+                    <input
+                      type="text"
+                      placeholder="Manager name"
+                      value={deliveryOwner}
+                      onChange={(event) => setDeliveryOwner(event.target.value)}
+                      required
+                    />
+                    <select
+                      value={deliveryProviderLogin}
+                      onChange={(event) => setDeliveryProviderLogin(event.target.value)}
+                    >
+                      {DELIVERY_PROVIDERS.map((provider) => (
+                        <option key={provider.id} value={provider.id}>{provider.name}</option>
+                      ))}
+                    </select>
+                    {deliveryError ? <p className="admin-auth-error">{deliveryError}</p> : null}
+                    <div className="admin-auth-actions">
+                      <button type="submit">Open Delivery Portal</button>
+                      <button type="button" className="ghost-button" onClick={() => window.location.hash = ""}>
+                        Back to Shop
+                      </button>
+                    </div>
+                  </form>
+                </section>
+              )
             )}
 
             {view === "home" && (

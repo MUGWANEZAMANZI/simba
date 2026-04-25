@@ -5,6 +5,15 @@ export default function OrderTracker({ order, onBack }) {
   const [status, setStatus] = useState("Preparing your order...");
   const deliveredNotifiedRef = useRef(false);
 
+  const statusToProgress = {
+    pending: { progress: 12, text: "Order is being packed..." },
+    assigned: { progress: 30, text: "Delivery company accepted the order." },
+    picked: { progress: 55, text: "Package picked from Simba branch." },
+    delivering: { progress: 80, text: "Motorbike is on the way!" },
+    delivered: { progress: 100, text: "Order delivered! Enjoy your meal." },
+    cancelled: { progress: 100, text: "Order was cancelled." },
+  };
+
   function notifyDelivered() {
     const message = "Order delivered! Enjoy your meal.";
 
@@ -44,6 +53,17 @@ export default function OrderTracker({ order, onBack }) {
   }
 
   useEffect(() => {
+    if (order?.status && statusToProgress[order.status]) {
+      const live = statusToProgress[order.status];
+      setProgress(live.progress);
+      setStatus(live.text);
+      if (order.status === "delivered" && !deliveredNotifiedRef.current) {
+        deliveredNotifiedRef.current = true;
+        notifyDelivered();
+      }
+      return;
+    }
+
     let animationFrame;
     let startTime = Date.now();
     const duration = 10000; // 10 seconds simulation
