@@ -63,6 +63,59 @@ db.exec(`
   );
 `);
 
+const BRANCH_SEED = [
+  {
+    name: "Union Trade Centre",
+    location: "3336+MHV Union Trade Centre, 1 KN 4 Ave, Kigali",
+    admin_secret: "UTC2026",
+  },
+  {
+    name: "KN 5 Road",
+    location: "KN 5 Rd, Kigali",
+    admin_secret: "KN5Road2026",
+  },
+  {
+    name: "KG 541 Street",
+    location: "KG 541 St, Kigali",
+    admin_secret: "KG5412026",
+  },
+  {
+    name: "Nyamirambo",
+    location: "24Q5+R2R, Kigali",
+    admin_secret: "Nyamirambo2026",
+  },
+  {
+    name: "Kimironko",
+    location: "24XF+XVV, KG 192 St, Kigali",
+    admin_secret: "Kimironko2026",
+  },
+  {
+    name: "Cosmos Area",
+    location: "23H4+26V, Kigali",
+    admin_secret: "Cosmos2026",
+  },
+  {
+    name: "Kigali Central East",
+    location: "24G3+MCV, Kigali",
+    admin_secret: "CentralEast2026",
+  },
+  {
+    name: "KK 35 Avenue",
+    location: "KK 35 Ave, Kigali",
+    admin_secret: "KK35Ave2026",
+  },
+  {
+    name: "City Link",
+    location: "24J3+Q3, Kigali",
+    admin_secret: "CityLink2026",
+  },
+  {
+    name: "Gisenyi",
+    location: "8754+P7W, Gisenyi",
+    admin_secret: "Gisenyi2026",
+  },
+];
+
 // Migration: Add branch_id to orders if it's an old DB
 try {
   const columns = db.prepare("PRAGMA table_info(orders)").all();
@@ -74,28 +127,37 @@ try {
   console.error("Migration failed:", err);
 }
 
-// Seed branches if empty
-const branchesCount = db.prepare("SELECT COUNT(*) as count FROM branches").get().count;
-if (branchesCount === 0) {
+// Seed branches and keep them in sync with current catalog of locations.
+try {
+  const findBranchByLocation = db.prepare("SELECT id FROM branches WHERE location = ?");
   const insertBranch = db.prepare("INSERT INTO branches (name, location, admin_secret) VALUES (?, ?, ?)");
-  insertBranch.run("Downtown", "Kigali City Center", "Downtown2026");
-  insertBranch.run("Kimironko", "Kimironko Market Area", "Kimironko2026");
-  insertBranch.run("Gikondo", "Gikondo Industrial Park", "Gikondo2026");
-  
-  // Seed inventory for a few products for demo
-  try {
-    const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
-    const products = data.products.slice(0, 50); // Seed inventory for first 50 products
-    const insertInventory = db.prepare("INSERT INTO inventory (branch_id, product_id, quantity) VALUES (?, ?, ?)");
-    
-    [1, 2, 3].forEach(branchId => {
-      products.forEach(p => {
-        insertInventory.run(branchId, p.id, Math.floor(Math.random() * 50) + 10);
-      });
+
+  BRANCH_SEED.forEach((branch) => {
+    const exists = findBranchByLocation.get(branch.location);
+    if (!exists) {
+      insertBranch.run(branch.name, branch.location, branch.admin_secret);
+    }
+  });
+} catch (err) {
+  console.error("Failed to seed branches:", err);
+}
+
+// Ensure demo inventory exists for every branch without duplicating existing rows.
+try {
+  const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
+  const products = data.products.slice(0, 50);
+  const branchIds = db.prepare("SELECT id FROM branches").all();
+  const insertInventory = db.prepare(
+    "INSERT OR IGNORE INTO inventory (branch_id, product_id, quantity) VALUES (?, ?, ?)",
+  );
+
+  branchIds.forEach(({ id }) => {
+    products.forEach((product) => {
+      insertInventory.run(id, product.id, Math.floor(Math.random() * 50) + 10);
     });
-  } catch (err) {
-    console.error("Failed to seed inventory:", err);
-  }
+  });
+} catch (err) {
+  console.error("Failed to seed inventory:", err);
 }
 
 const upsertAccount = db.prepare(`

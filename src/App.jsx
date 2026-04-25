@@ -282,10 +282,80 @@ const sortOptions = ["name", "price-asc", "price-desc"];
 const HF_MODEL = import.meta.env.VITE_HF_MODEL || "CohereLabs/aya-expanse-8b";
 const HF_TOKEN = import.meta.env.VITE_HF_TOKEN;
 const DELIVERY_PROVIDERS = [
-  { id: "vuba-vuba", name: "Vuba Vuba", baseFee: 700 },
-  { id: "tuma250", name: "Tuma250", baseFee: 500 },
-  { id: "simba-express", name: "Simba Express", baseFee: 300 },
+  { id: "vuba-vuba", name: "Vuba Vuba", baseFee: 700, perKmFee: 220 },
+  { id: "tuma250", name: "Tuma250", baseFee: 500, perKmFee: 170 },
+  { id: "simba-express", name: "Simba Express", baseFee: 300, perKmFee: 120 },
 ];
+
+const BRANCH_COORDS = {
+  Downtown: { lat: -1.9441, lng: 30.0619 },
+  Kimironko: { lat: -1.9367, lng: 30.1105 },
+  Gikondo: { lat: -1.9869, lng: 30.0784 },
+};
+
+const BRANCH_COORDS_BY_LOCATION = {
+  "3336+MHV Union Trade Centre, 1 KN 4 Ave, Kigali": { lat: -1.9499, lng: 30.0588 },
+  "KN 5 Rd, Kigali": { lat: -1.9512, lng: 30.0674 },
+  "KG 541 St, Kigali": { lat: -1.9388, lng: 30.1014 },
+  "24Q5+R2R, Kigali": { lat: -1.969, lng: 30.0487 },
+  "24XF+XVV, KG 192 St, Kigali": { lat: -1.9367, lng: 30.1105 },
+  "23H4+26V, Kigali": { lat: -1.9822, lng: 30.0498 },
+  "24G3+MCV, Kigali": { lat: -1.9627, lng: 30.0778 },
+  "KK 35 Ave, Kigali": { lat: -1.9706, lng: 30.1038 },
+  "24J3+Q3, Kigali": { lat: -1.9553, lng: 30.0714 },
+  "8754+P7W, Gisenyi": { lat: -1.7028, lng: 29.2568 },
+};
+
+const BRANCH_STORIES = {
+  "3336+MHV Union Trade Centre, 1 KN 4 Ave, Kigali": {
+    reviewer: "Richard Madete",
+    quote: "Largest and best supermarket in Kigali city center and the country in general.",
+  },
+  "KN 5 Rd, Kigali": {
+    reviewer: "Stella Matutina",
+    quote: "First supermarket in Kigali where you can find almost everything, including cooked food.",
+  },
+  "KG 541 St, Kigali": {
+    reviewer: "Dipankar Lahkar",
+    quote: "Great location in Kigali to buy groceries and home items.",
+  },
+  "24Q5+R2R, Kigali": {
+    reviewer: "MUHOZA Rene",
+    quote: "Packed with nearly everything needed food-wise in Rwanda.",
+  },
+  "24XF+XVV, KG 192 St, Kigali": {
+    reviewer: "Niyotwiringiye Charles",
+    quote: "Kimironko branch known as a reliable supermarket stop.",
+  },
+  "23H4+26V, Kigali": {
+    reviewer: "Cyuzuzo Ngenzi",
+    quote: "Mixed experiences were reported, showing why consistency matters across branches.",
+  },
+  "24G3+MCV, Kigali": {
+    reviewer: "SIBOMANA Eugene",
+    quote: "Go-to supermarket branch for regular shopping in Kigali.",
+  },
+  "KK 35 Ave, Kigali": {
+    reviewer: "Matylda B",
+    quote: "International customers highlighted service expectations and treatment.",
+  },
+  "24J3+Q3, Kigali": {
+    reviewer: "Bethany Mattison",
+    quote: "Noted quality differences between branches.",
+  },
+  "8754+P7W, Gisenyi": {
+    reviewer: "1 mutuyimana",
+    quote: "Supermarket branch serving Gisenyi area.",
+  },
+};
+
+const DISTRICT_COORDS = {
+  Gasabo: { lat: -1.9237, lng: 30.0946 },
+  Kicukiro: { lat: -1.9706, lng: 30.1038 },
+  Nyarugenge: { lat: -1.9499, lng: 30.0588 },
+  Musanze: { lat: -1.4996, lng: 29.6347 },
+  Rubavu: { lat: -1.678, lng: 29.2589 },
+};
 
 const moodKeywordBoosts = {
   energy: ["coffee", "tea", "juice", "chocolate", "energy", "breakfast", "snack"],
@@ -323,6 +393,31 @@ function resolveProductImage(product) {
 
 function tokenize(value) {
   return value.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+}
+
+function haversineKm(pointA, pointB) {
+  if (!pointA || !pointB) return 0;
+  const toRadians = (degree) => (degree * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+  const dLat = toRadians(pointB.lat - pointA.lat);
+  const dLng = toRadians(pointB.lng - pointA.lng);
+  const lat1 = toRadians(pointA.lat);
+  const lat2 = toRadians(pointB.lat);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
+}
+
+function estimateDeliveryDistanceKm(form, selectedBranch) {
+  const branchPoint =
+    BRANCH_COORDS_BY_LOCATION[selectedBranch?.location] ||
+    BRANCH_COORDS[selectedBranch?.name] ||
+    BRANCH_COORDS.Downtown;
+  const customerPoint = form.location || DISTRICT_COORDS[form.district] || DISTRICT_COORDS.Gasabo;
+  const distance = haversineKm(branchPoint, customerPoint);
+  return Math.max(1, Math.round(distance * 10) / 10);
 }
 
 function inferMoodBuckets(feeling) {
@@ -523,7 +618,7 @@ function App() {
       setProductsLoading(false);
       return;
     }
-    
+
     setProductsLoading(true);
     const branchQuery = selectedBranch ? `branchId=${selectedBranch.id}` : "";
     const url = `/api/products?${branchQuery}&page=${currentPage}&limit=25`;
@@ -670,9 +765,13 @@ function App() {
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cartItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+  const deliveryDistanceKm = useMemo(
+    () => estimateDeliveryDistanceKm(form, selectedBranch),
+    [form.district, form.location, selectedBranch],
+  );
   const deliveryOptions = DELIVERY_PROVIDERS.map((provider) => ({
     ...provider,
-    fee: provider.baseFee,
+    fee: Math.round(provider.baseFee + provider.perKmFee * deliveryDistanceKm),
   }));
   const selectedDelivery =
     deliveryOptions.find((option) => option.id === form.deliveryProvider) || deliveryOptions[0];
@@ -1039,8 +1138,8 @@ function App() {
               !selectedBranch ? (
                 <section className="branch-selection card">
                   <div className="section-heading">
-                    <h3>Select a Branch</h3>
-                    <p>Choose a Simba branch near you to see available inventory.</p>
+                    <h3>Simba Branches Across Rwanda</h3>
+                    <p>Select one of the 10 known locations to view available inventory and delivery estimates.</p>
                   </div>
                   <div className="branch-grid">
                     {branches.map(branch => (
@@ -1051,6 +1150,12 @@ function App() {
                       >
                         <strong>{branch.name}</strong>
                         <span>{branch.location}</span>
+                        {BRANCH_STORIES[branch.location] ? (
+                          <>
+                            <p className="branch-review">"{BRANCH_STORIES[branch.location].quote}"</p>
+                            <small className="branch-reviewer">{BRANCH_STORIES[branch.location].reviewer}</small>
+                          </>
+                        ) : null}
                       </button>
                     ))}
                   </div>
@@ -1254,8 +1359,8 @@ function App() {
                       </section>
                       {pagination.totalPages > 1 && (
                         <div className="pagination-controls">
-                          <button 
-                            disabled={currentPage === 1} 
+                          <button
+                            disabled={currentPage === 1}
                             onClick={() => {
                               setCurrentPage(p => Math.max(1, p - 1));
                               window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
@@ -1264,8 +1369,8 @@ function App() {
                             Previous
                           </button>
                           <span>Page {currentPage} of {pagination.totalPages}</span>
-                          <button 
-                            disabled={currentPage === pagination.totalPages} 
+                          <button
+                            disabled={currentPage === pagination.totalPages}
                             onClick={() => {
                               setCurrentPage(p => Math.min(pagination.totalPages, p + 1));
                               window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
