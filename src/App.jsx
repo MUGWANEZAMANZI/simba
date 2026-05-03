@@ -133,6 +133,60 @@ const languages = {
     language: "Language",
     switchLanguage: "Switch language",
     languageHint: "Choose English, French, or Kinyarwanda",
+    adminNav: "Admin",
+    deliveryNav: "Delivery",
+    profileNav: "Profile",
+    changeBranch: "Change branch",
+    branchSelectionTitle: "Simba branches across Rwanda",
+    branchSelectionHint: "Select a location to see stock and delivery estimates.",
+    loadingInventory: "Loading inventory...",
+    branchManagementTitle: "Branch Management",
+    branchManagementHint: "Enter branch name and secret code (e.g., Downtown / Downtown2026)",
+    yourNamePlaceholder: "Your name",
+    secretCodePlaceholder: "Secret code",
+    openAdminPortal: "Open Admin Portal",
+    deliveryPortalEntryTitle: "Delivery Company Portal",
+    deliveryPortalHint: "Login as delivery manager and manage the orders assigned to your company.",
+    managerNamePlaceholder: "Manager name",
+    openDeliveryPortal: "Open Delivery Portal",
+    branchStaffTitle: "Branch Staff Portal",
+    branchStaffHint: "Enter branch name and secret code to manage incoming orders.",
+    branchNamePlaceholder: "Branch name",
+    openMarketRepDashboard: "Open Market Rep Dashboard",
+    recommendationKicker: "Gasuku picks",
+    recommendationTitle: "Feel-based recommendations",
+    recommendationPrompt: "Describe your mood or need and Gasuku will rank products from the dataset.",
+    recommendationInputPlaceholder: "I feel tired and need a quick study boost",
+    recommendationButton: "Get recommendations",
+    recommendationThinking: "Thinking...",
+    recommendationSourceLabel: "Source",
+    localFallbackSource: "Local fallback",
+    usingCuratedFallback: "Using a curated Unsplash fallback matched to the product title.",
+    quantityLabel: "Quantity",
+    branchLabel: "Branch",
+    statusLabel: "Status",
+    idLabel: "ID",
+    availableLabel: "available",
+    inStockLabel: "In stock",
+    unavailableLabel: "Unavailable",
+    previousPage: "Previous",
+    nextPage: "Next",
+    pageLabel: "Page",
+    ofLabel: "of",
+    resetFilters: "Reset filters",
+    categoryLabels: {
+      "Alcoholic Drinks": "Alcoholic Drinks",
+      "Baby Products": "Baby Products",
+      "Cleaning & Sanitary": "Cleaning & Sanitary",
+      "Cosmetics & Personal Care": "Cosmetics & Personal Care",
+      "Food Products": "Food Products",
+      General: "General",
+      "Kitchenware & Electronics": "Kitchenware & Electronics",
+      "Sports & Wellness": "Sports & Wellness",
+      "Kitchen Storage": "Kitchen Storage",
+      "Pet Care": "Pet Care",
+      Stationery: "Stationery",
+    },
     tagline: "Rwanda's online supermarket",
     detailBack: "Back to products",
     productInfo: "Product information",
@@ -267,6 +321,60 @@ const languages = {
     language: "Langue",
     switchLanguage: "Changer de langue",
     languageHint: "Choisissez English, Français ou Kinyarwanda",
+    adminNav: "Admin",
+    deliveryNav: "Livraison",
+    profileNav: "Profil",
+    changeBranch: "Changer de boutique",
+    branchSelectionTitle: "Les boutiques Simba au Rwanda",
+    branchSelectionHint: "Choisissez un emplacement pour voir le stock et les estimations de livraison.",
+    loadingInventory: "Chargement de l'inventaire...",
+    branchManagementTitle: "Gestion de boutique",
+    branchManagementHint: "Saisissez le nom de la boutique et le code secret (ex. Downtown / Downtown2026)",
+    yourNamePlaceholder: "Votre nom",
+    secretCodePlaceholder: "Code secret",
+    openAdminPortal: "Ouvrir le portail admin",
+    deliveryPortalEntryTitle: "Portail de livraison",
+    deliveryPortalHint: "Connectez-vous comme responsable de livraison pour gérer les commandes de votre société.",
+    managerNamePlaceholder: "Nom du responsable",
+    openDeliveryPortal: "Ouvrir le portail livraison",
+    branchStaffTitle: "Portail du personnel de boutique",
+    branchStaffHint: "Saisissez le nom de la boutique et le code secret pour gérer les commandes entrantes.",
+    branchNamePlaceholder: "Nom de la boutique",
+    openMarketRepDashboard: "Ouvrir le tableau de bord",
+    recommendationKicker: "Sélections Gasuku",
+    recommendationTitle: "Recommandations selon votre ressenti",
+    recommendationPrompt: "Décrivez votre humeur ou votre besoin et Gasuku classera les produits du catalogue.",
+    recommendationInputPlaceholder: "Je suis fatigué et j'ai besoin d'un boost rapide pour étudier",
+    recommendationButton: "Voir les recommandations",
+    recommendationThinking: "Analyse...",
+    recommendationSourceLabel: "Source",
+    localFallbackSource: "Solution locale",
+    usingCuratedFallback: "Utilisation d'une solution Unsplash de secours adaptée au titre du produit.",
+    quantityLabel: "Quantité",
+    branchLabel: "Boutique",
+    statusLabel: "Statut",
+    idLabel: "ID",
+    availableLabel: "disponible",
+    inStockLabel: "En stock",
+    unavailableLabel: "Indisponible",
+    previousPage: "Précédent",
+    nextPage: "Suivant",
+    pageLabel: "Page",
+    ofLabel: "sur",
+    resetFilters: "Réinitialiser les filtres",
+    categoryLabels: {
+      "Alcoholic Drinks": "Boissons alcoolisées",
+      "Baby Products": "Produits pour bébé",
+      "Cleaning & Sanitary": "Nettoyage et hygiène",
+      "Cosmetics & Personal Care": "Cosmétiques et soins personnels",
+      "Food Products": "Produits alimentaires",
+      General: "Général",
+      "Kitchenware & Electronics": "Cuisine et électronique",
+      "Sports & Wellness": "Sport et bien-être",
+      "Kitchen Storage": "Rangement de cuisine",
+      "Pet Care": "Soins pour animaux",
+      Stationery: "Papeterie",
+    },
     tagline: "Le supermarché en ligne du Rwanda",
     detailBack: "Retour aux produits",
     productInfo: "Informations produit",
@@ -401,6 +509,60 @@ const languages = {
     language: "Ururimi",
     switchLanguage: "Hindura ururimi",
     languageHint: "Hitamo Icyongereza, Igifaransa, cyangwa Ikinyarwanda",
+    adminNav: "Admin",
+    deliveryNav: "Iyo kohereza",
+    profileNav: "Umwirondoro",
+    changeBranch: "Hindura ishami",
+    branchSelectionTitle: "Amashami ya Simba hirya no hino mu Rwanda",
+    branchSelectionHint: "Hitamo aho ushaka kureba ibicuruzwa n'ikigereranyo cyo kohereza.",
+    loadingInventory: "Birimo gushyirwaho ibicuruzwa...",
+    branchManagementTitle: "Ubuyobozi bw'ishami",
+    branchManagementHint: "Andika izina ry'ishami na kode y'ibanga (urugero Downtown / Downtown2026)",
+    yourNamePlaceholder: "Izina ryawe",
+    secretCodePlaceholder: "Kode y'ibanga",
+    openAdminPortal: "Fungura Admin Portal",
+    deliveryPortalEntryTitle: "Aho kohereza ibicuruzwa",
+    deliveryPortalHint: "Injira nk'umuyobozi wo kohereza kandi ucunge amategeko yahawe sosiyete yawe.",
+    managerNamePlaceholder: "Izina ry'umuyobozi",
+    openDeliveryPortal: "Fungura Delivery Portal",
+    branchStaffTitle: "Aho abakozi b'ishami binjira",
+    branchStaffHint: "Andika izina ry'ishami na kode y'ibanga kugira ngo ucunge amategeko mashya.",
+    branchNamePlaceholder: "Izina ry'ishami",
+    openMarketRepDashboard: "Fungura Market Rep Dashboard",
+    recommendationKicker: "Gasuku picks",
+    recommendationTitle: "Ibyifuzo bishingiye ku myumvire",
+    recommendationPrompt: "Sobanura uko wiyumva cyangwa icyo ukeneye maze Gasuku izashyira ibicuruzwa ku murongo.",
+    recommendationInputPlaceholder: "Ndumva ndushye kandi nkeneye kongera imbaraga zo kwiga",
+    recommendationButton: "Bona ibyifuzo",
+    recommendationThinking: "Biri gutekerezwa...",
+    recommendationSourceLabel: "Inkomoko",
+    localFallbackSource: "Ibyifuzo byo mu bubiko",
+    usingCuratedFallback: "Gukoresha isimbura rya Unsplash ryatoranyijwe rikurikije izina ry'igicuruzwa.",
+    quantityLabel: "Ingano",
+    branchLabel: "Ishami",
+    statusLabel: "Imiterere",
+    idLabel: "ID",
+    availableLabel: "bihari",
+    inStockLabel: "Biri mu bubiko",
+    unavailableLabel: "Ntibihari",
+    previousPage: "Ibibanza byabanjirije",
+    nextPage: "Ibikurikira",
+    pageLabel: "Urupapuro",
+    ofLabel: "rwa",
+    resetFilters: "Siba amagaragaza",
+    categoryLabels: {
+      "Alcoholic Drinks": "Ibinyobwa bisindisha",
+      "Baby Products": "Ibicuruzwa by'abana",
+      "Cleaning & Sanitary": "Isuku n'isukura",
+      "Cosmetics & Personal Care": "Ibikoresho byo kwisiga no kwiyitaho",
+      "Food Products": "Ibiribwa",
+      General: "Rusange",
+      "Kitchenware & Electronics": "Ibikoresho byo mu gikoni n'ikoranabuhanga",
+      "Sports & Wellness": "Siporo n'imibereho myiza",
+      "Kitchen Storage": "Kubika ibikoresho byo mu gikoni",
+      "Pet Care": "Kwitaho amatungo",
+      Stationery: "Ibikoresho by'ishuri",
+    },
     tagline: "Supermarket yo kuri internet mu Rwanda",
     detailBack: "Subira ku bicuruzwa",
     productInfo: "Ibisobanuro by'igicuruzwa",
@@ -863,6 +1025,8 @@ function App() {
   }, [products]);
 
   const t = languages[language];
+  const categoryLabelMap = t.categoryLabels || {};
+  const translateCategory = (name) => (name === "All" ? t.allCategories : categoryLabelMap[name] || name);
   const categories = useMemo(
     () => ["All", ...new Set(normalizeProducts.map((product) => product.category))],
     [normalizeProducts],
@@ -956,10 +1120,11 @@ function App() {
         .filter((item) => item !== "All")
         .map((item) => ({
           name: item,
+          label: translateCategory(item),
           image: categoryImages[item],
           count: normalizeProducts.filter((product) => product.category === item).length,
         })),
-    [categories],
+    [categories, translateCategory],
   );
 
   const relatedProducts = useMemo(() => {
@@ -1318,12 +1483,12 @@ function App() {
         </div>
         <div className="topbar-actions">
           {selectedBranch && (
-            <button className="ghost-button" onClick={() => setSelectedBranch(null)}>Change Branch</button>
+            <button className="ghost-button" onClick={() => setSelectedBranch(null)}>{t.changeBranch}</button>
           )}
-          <button className="ghost-button" onClick={() => window.location.hash = 'admin'}>Admin</button>
-          <button className="ghost-button" onClick={() => window.location.hash = 'delivery'}>Delivery</button>
+          <button className="ghost-button" onClick={() => window.location.hash = 'admin'}>{t.adminNav}</button>
+          <button className="ghost-button" onClick={() => window.location.hash = 'delivery'}>{t.deliveryNav}</button>
           {loggedInPhone && (
-            <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>Profile</button>
+            <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>{t.profileNav}</button>
           )}
           <div className="language-switcher" aria-label={t.switchLanguage}>
             <span className="language-switcher-label">{t.switchLanguage}</span>
@@ -1370,7 +1535,7 @@ function App() {
       <main className="page">
         {(productsLoading && selectedBranch) ? (
           <div className="card" style={{ textAlign: "center", padding: "4rem" }}>
-            <h2>Loading inventory...</h2>
+            <h2>{t.loadingInventory}</h2>
           </div>
         ) : (
           <>
@@ -1386,28 +1551,28 @@ function App() {
                 />
               ) : (
                 <section className="admin-auth card">
-                  <h2>Branch Management</h2>
-                  <p>Enter branch name and secret code (e.g., Downtown / Downtown2026)</p>
+                  <h2>{t.branchManagementTitle}</h2>
+                  <p>{t.branchManagementHint}</p>
                   <form className="admin-auth-form" onSubmit={handleAdminLogin}>
                     <input
                       type="text"
-                      placeholder="Your name"
+                      placeholder={t.yourNamePlaceholder}
                       value={adminName}
                       onChange={(event) => setAdminName(event.target.value)}
                       required
                     />
                     <input
                       type="password"
-                      placeholder="Secret code"
+                      placeholder={t.secretCodePlaceholder}
                       value={adminCode}
                       onChange={(event) => setAdminCode(event.target.value)}
                       required
                     />
                     {adminError ? <p className="admin-auth-error">{adminError}</p> : null}
                     <div className="admin-auth-actions">
-                      <button type="submit">Open Admin Portal</button>
+                      <button type="submit">{t.openAdminPortal}</button>
                       <button type="button" className="ghost-button" onClick={() => window.location.hash = ""}>
-                        Back to Shop
+                        {t.backToShop}
                       </button>
                     </div>
                   </form>
@@ -1451,12 +1616,12 @@ function App() {
                 />
               ) : (
                 <section className="admin-auth card">
-                  <h2>Delivery Company Portal</h2>
-                  <p>Login as delivery manager and manage the orders assigned to your company.</p>
+                  <h2>{t.deliveryPortalEntryTitle}</h2>
+                  <p>{t.deliveryPortalHint}</p>
                   <form className="admin-auth-form" onSubmit={handleDeliveryLogin}>
                     <input
                       type="text"
-                      placeholder="Manager name"
+                      placeholder={t.managerNamePlaceholder}
                       value={deliveryOwner}
                       onChange={(event) => setDeliveryOwner(event.target.value)}
                       required
@@ -1471,9 +1636,9 @@ function App() {
                     </select>
                     {deliveryError ? <p className="admin-auth-error">{deliveryError}</p> : null}
                     <div className="admin-auth-actions">
-                      <button type="submit">Open Delivery Portal</button>
+                      <button type="submit">{t.openDeliveryPortal}</button>
                       <button type="button" className="ghost-button" onClick={() => window.location.hash = ""}>
-                        Back to Shop
+                        {t.backToShop}
                       </button>
                     </div>
                   </form>
@@ -1492,28 +1657,28 @@ function App() {
                 />
               ) : (
                 <section className="admin-auth card">
-                  <h2>Branch Staff Portal</h2>
-                  <p>Enter branch name and secret code to manage incoming orders.</p>
+                  <h2>{t.branchStaffTitle}</h2>
+                  <p>{t.branchStaffHint}</p>
                   <form className="admin-auth-form" onSubmit={handleMarketLogin}>
                     <input
                       type="text"
-                      placeholder="Branch name"
+                      placeholder={t.branchNamePlaceholder}
                       value={marketName}
                       onChange={(event) => setMarketName(event.target.value)}
                       required
                     />
                     <input
                       type="password"
-                      placeholder="Secret code"
+                      placeholder={t.secretCodePlaceholder}
                       value={marketCode}
                       onChange={(event) => setMarketCode(event.target.value)}
                       required
                     />
                     {marketError ? <p className="admin-auth-error">{marketError}</p> : null}
                     <div className="admin-auth-actions">
-                      <button type="submit">Open Market Rep Dashboard</button>
+                      <button type="submit">{t.openMarketRepDashboard}</button>
                       <button type="button" className="ghost-button" onClick={() => window.location.hash = ""}>
-                        Back to Shop
+                        {t.backToShop}
                       </button>
                     </div>
                   </form>
@@ -1525,8 +1690,8 @@ function App() {
               !selectedBranch ? (
                 <section className="branch-selection card">
                   <div className="section-heading">
-                    <h3>Simba Branches Across Rwanda</h3>
-                    <p>Select one of the 10 known locations to view available inventory and delivery estimates.</p>
+                    <h3>{t.branchSelectionTitle}</h3>
+                    <p>{t.branchSelectionHint}</p>
                   </div>
                   <div className="branch-grid">
                     {branches.map(branch => (
@@ -1583,7 +1748,7 @@ function App() {
                       style={{ backgroundImage: `linear-gradient(180deg, transparent, rgba(12,16,28,0.82)), url(${heroCategory?.image})` }}
                     >
                       <span>{t.categorySpotlight}</span>
-                      <strong>{heroCategory?.name}</strong>
+                      <strong>{translateCategory(heroCategory?.name)}</strong>
                       <small>
                         {heroCategory?.count} {t.items}
                       </small>
@@ -1593,27 +1758,25 @@ function App() {
                   <section className="recommendation-panel recommendation-panel-feature">
                     <div className="section-heading">
                       <div>
-                        <span className="recommendation-kicker">Gasuku picks</span>
-                        <h3>Feel-based recommendations</h3>
+                        <span className="recommendation-kicker">{t.recommendationKicker}</span>
+                        <h3>{t.recommendationTitle}</h3>
                       </div>
-                      <p>
-                        Describe your mood or need and Gasuku will rank real products from the dataset.
-                      </p>
+                      <p>{t.recommendationPrompt}</p>
                     </div>
                     <div className="recommendation-controls recommendation-controls-feature">
                       <input
                         value={feeling}
                         onChange={(event) => setFeeling(event.target.value)}
-                        placeholder="I feel tired and need a quick study boost"
+                        placeholder={t.recommendationInputPlaceholder}
                       />
                       <button onClick={handleRecommend} disabled={recommendationLoading}>
-                        {recommendationLoading ? "Thinking..." : "Get recommendations"}
+                        {recommendationLoading ? t.recommendationThinking : t.recommendationButton}
                       </button>
                     </div>
                     {recommendationIntro ? <p className="hero-meta">{recommendationIntro}</p> : null}
                     {recommendationSource ? (
                       <p className="hero-meta">
-                        Source: {recommendationSource === "fallback" ? "Local fallback" : `Gasuku via ${HF_MODEL}`}
+                        {t.recommendationSourceLabel}: {recommendationSource === "fallback" ? t.localFallbackSource : `Gasuku via ${HF_MODEL}`}
                       </p>
                     ) : null}
                     {recommendationError ? <p className="error-text">{recommendationError}</p> : null}
@@ -1623,7 +1786,7 @@ function App() {
                           <article className="mini-card recommendation-card" key={product.id}>
                             <img src={resolveProductImage(product)} alt={product.name} />
                             <div className="mini-card-body">
-                              <p className="product-category">{product.category}</p>
+                              <p className="product-category">{translateCategory(product.category)}</p>
                               <button onClick={() => openProduct(product)}>{product.name}</button>
                               <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
                               <p className="recommendation-reason">{product.recommendationReason}</p>
@@ -1656,7 +1819,7 @@ function App() {
                           style={{ backgroundImage: `linear-gradient(180deg, rgba(10,17,28,0.15), rgba(10,17,28,0.78)), url(${item.image})` }}
                         >
                           <span>{item.count}</span>
-                          <strong>{item.name}</strong>
+                          <strong>{item.label}</strong>
                         </button>
                       ))}
                     </div>
@@ -1677,7 +1840,7 @@ function App() {
                           .filter((item) => item !== "All")
                           .map((item) => (
                             <option key={item} value={item}>
-                              {item}
+                              {translateCategory(item)}
                             </option>
                           ))}
                       </select>
@@ -1710,7 +1873,7 @@ function App() {
                           updateQuery({ category: null, product: null });
                         }}
                       >
-                        Reset
+                        {t.resetFilters}
                       </button>
                     </div>
                   </section>
@@ -1724,14 +1887,14 @@ function App() {
                               <img src={resolveProductImage(product)} alt={product.name} loading="lazy" />
                             </button>
                             <div className="product-body">
-                              <p className="product-category">{product.category}</p>
+                              <p className="product-category">{translateCategory(product.category)}</p>
                               <button className="product-name" onClick={() => openProduct(product)}>
                                 {product.name}
                               </button>
                               <div className="product-meta">
                                 <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
                                 <small>
-                                  {product.quantity} {product.unit} available
+                                  {product.quantity} {product.unit} {t.availableLabel}
                                 </small>
                               </div>
                             </div>
@@ -1753,9 +1916,9 @@ function App() {
                               window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
                             }}
                           >
-                            Previous
+                            {t.previousPage}
                           </button>
-                          <span>Page {currentPage} of {pagination.totalPages}</span>
+                          <span>{t.pageLabel} {currentPage} {t.ofLabel} {pagination.totalPages}</span>
                           <button
                             disabled={currentPage === pagination.totalPages}
                             onClick={() => {
@@ -1763,7 +1926,7 @@ function App() {
                               window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
                             }}
                           >
-                            Next
+                            {t.nextPage}
                           </button>
                         </div>
                       )}
@@ -1778,30 +1941,30 @@ function App() {
                           <img src={resolveProductImage(selectedProduct)} alt={selectedProduct.name} />
                         </div>
                         <div className="detail-copy">
-                          <p className="product-category">{selectedProduct.category}</p>
+                          <p className="product-category">{translateCategory(selectedProduct.category)}</p>
                           <h3>{selectedProduct.name}</h3>
                           <strong>
                             {formatCurrency(selectedProduct.price, t.locale, t.currency)}
                           </strong>
                           <p>{t.paymentHint}</p>
                           {/placehold\.co/i.test(selectedProduct.image) ? (
-                            <p className="hero-meta">Using a curated Unsplash fallback matched to the product title.</p>
+                            <p className="hero-meta">{t.usingCuratedFallback}</p>
                           ) : null}
                           <dl className="detail-specs">
                             <div>
-                              <dt>Quantity</dt>
+                              <dt>{t.quantityLabel}</dt>
                               <dd>{selectedProduct.quantity} {selectedProduct.unit}</dd>
                             </div>
                             <div>
-                              <dt>Branch</dt>
+                              <dt>{t.branchLabel}</dt>
                               <dd>{selectedBranch.name}</dd>
                             </div>
                             <div>
-                              <dt>Status</dt>
-                              <dd>{selectedProduct.inStock ? "In stock" : "Unavailable"}</dd>
+                              <dt>{t.statusLabel}</dt>
+                              <dd>{selectedProduct.inStock ? t.inStockLabel : t.unavailableLabel}</dd>
                             </div>
                             <div>
-                              <dt>ID</dt>
+                              <dt>{t.idLabel}</dt>
                               <dd>#{selectedProduct.id}</dd>
                             </div>
                           </dl>
