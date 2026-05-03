@@ -81,12 +81,12 @@ The app uses a hybrid flow:
 
 If no token is configured, the UI falls back to local recommendation scoring.
 
-## Google Maps Checkout
+## Delivery Distance And Pricing
 
-- set `VITE_GOOGLE_MAPS_API_KEY`
-- the checkout caches customer details in local storage
-- delivery pricing is computed from the Simba Kicukiro origin to the selected home pin
-- current delivery formula: provider base fee + `100 RWF * distance in km`
+- no maps API key is required for checkout
+- checkout caches customer details in local storage
+- delivery distance is estimated locally from selected branch to customer district/location
+- current delivery formula: provider base fee + `(provider per-km fee * distance in km)`
 
 ## Features
 

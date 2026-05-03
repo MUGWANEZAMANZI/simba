@@ -4,6 +4,7 @@ import UserProfile from "./components/UserProfile";
 import OrderTracker from "./components/OrderTracker";
 import AdminPortal from "./components/AdminPortal";
 import DeliveryPortal from "./components/DeliveryPortal";
+import MarketRep from "./components/MarketRep";
 
 const ADMIN_SECRET = "NobOdyLikesMe";
 
@@ -147,6 +148,9 @@ const languages = {
     orderSaving: "Saving order...",
     orderFailed: "Could not save the order.",
     chooseLocation: "Choose on map",
+    accept: "Accept",
+    preparing: "Preparing",
+    ready: "Ready",
   },
   fr: {
     locale: "fr-FR",
@@ -211,6 +215,9 @@ const languages = {
     orderSaving: "Enregistrement de la commande...",
     orderFailed: "Impossible d'enregistrer la commande.",
     chooseLocation: "Choisir sur la carte",
+    accept: "Accepter",
+    preparing: "En préparation",
+    ready: "Prêt",
   },
   rw: {
     locale: "rw-RW",
@@ -275,6 +282,9 @@ const languages = {
     orderSaving: "Ndabika commande...",
     orderFailed: "Ntibyakunze kubika commande.",
     chooseLocation: "Hitamo ku ikarita",
+    accept: "Emeza",
+    preparing: "Gutegura",
+    ready: "Yiteguye",
   },
 };
 
@@ -610,6 +620,10 @@ function App() {
   const [deliveryProviderLogin, setDeliveryProviderLogin] = useState("simba-express");
   const [deliveryAuthorized, setDeliveryAuthorized] = useState(false);
   const [deliveryError, setDeliveryError] = useState("");
+  const [marketAuthorized, setMarketAuthorized] = useState(false);
+  const [marketName, setMarketName] = useState("");
+  const [marketCode, setMarketCode] = useState("");
+  const [marketError, setMarketError] = useState("");
 
   useEffect(() => {
     fetch("/api/branches")
@@ -864,6 +878,7 @@ function App() {
       const hash = window.location.hash.replace("#", "");
       if (hash === "admin") setView("admin");
       else if (hash === "delivery") setView("delivery");
+      else if (hash === "market") setView("market");
       else if (hash === "profile") setView("profile");
       else if (hash.startsWith("track-")) {
         const orderId = hash.split("-")[1];
@@ -1023,6 +1038,44 @@ function App() {
     } catch (err) {
       setAdminError(err.message);
     }
+  }
+
+  async function handleMarketLogin(event) {
+    event.preventDefault();
+    const name = marketName.trim();
+    if (!name) {
+      setMarketError("Enter branch name to continue.");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/branch-login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, secret: marketCode })
+      });
+
+      if (!response.ok) {
+        throw new Error("Invalid branch name or secret.");
+      }
+
+      const branch = await response.json();
+      setMarketAuthorized(true);
+      localStorage.setItem("simba-market-branch", JSON.stringify(branch));
+      setMarketCode("");
+      setMarketError("");
+    } catch (err) {
+      setMarketError(err.message);
+    }
+  }
+
+  function handleMarketLogout() {
+    setMarketAuthorized(false);
+    setMarketName("");
+    setMarketCode("");
+    setMarketError("");
+    localStorage.removeItem("simba-market-branch");
+    window.location.hash = "";
   }
 
   function handleAdminLogout() {
@@ -1196,6 +1249,46 @@ function App() {
                     {deliveryError ? <p className="admin-auth-error">{deliveryError}</p> : null}
                     <div className="admin-auth-actions">
                       <button type="submit">Open Delivery Portal</button>
+                      <button type="button" className="ghost-button" onClick={() => window.location.hash = ""}>
+                        Back to Shop
+                      </button>
+                    </div>
+                  </form>
+                </section>
+              )
+            )}
+
+            {view === "market" && (
+              marketAuthorized ? (
+                <MarketRep
+                  onBack={() => window.location.hash = ""}
+                  onLogout={handleMarketLogout}
+                  branch={JSON.parse(localStorage.getItem("simba-market-branch") || "null")}
+                  t={t}
+                  formatCurrency={formatCurrency}
+                />
+              ) : (
+                <section className="admin-auth card">
+                  <h2>Branch Staff Portal</h2>
+                  <p>Enter branch name and secret code to manage incoming orders.</p>
+                  <form className="admin-auth-form" onSubmit={handleMarketLogin}>
+                    <input
+                      type="text"
+                      placeholder="Branch name"
+                      value={marketName}
+                      onChange={(event) => setMarketName(event.target.value)}
+                      required
+                    />
+                    <input
+                      type="password"
+                      placeholder="Secret code"
+                      value={marketCode}
+                      onChange={(event) => setMarketCode(event.target.value)}
+                      required
+                    />
+                    {marketError ? <p className="admin-auth-error">{marketError}</p> : null}
+                    <div className="admin-auth-actions">
+                      <button type="submit">Open Market Rep Dashboard</button>
                       <button type="button" className="ghost-button" onClick={() => window.location.hash = ""}>
                         Back to Shop
                       </button>
