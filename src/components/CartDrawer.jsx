@@ -65,7 +65,7 @@ export default function CartDrawer({
           </p>
         </div>
         <button className="ghost-button" onClick={() => setCartOpen(false)}>
-          Close
+          {t.close || 'Close'}
         </button>
       </div>
 
@@ -164,7 +164,7 @@ export default function CartDrawer({
                   ))}
                 </div>
                 <div>
-                  <p className="hero-meta">Pick delivery point on map (click anywhere)</p>
+                  <p className="hero-meta">{t.locationPicker || 'Pick delivery point on map (click anywhere)'}</p>
                   <LocationPickerMap
                     location={form.location}
                     onPick={(location) => setForm((current) => ({ ...current, location }))}
@@ -172,7 +172,7 @@ export default function CartDrawer({
                   <p className="hero-meta" style={{ marginTop: "0.5rem" }}>
                     {form.location
                       ? `Lat ${form.location.lat}, Lng ${form.location.lng}`
-                      : "No location selected yet."}
+                      : (t.noLocationSelected || 'No location selected yet.')}
                   </p>
                 </div>
               </div>

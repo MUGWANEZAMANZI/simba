@@ -63,56 +63,59 @@ db.exec(`
   );
 `);
 
+// Use a single universal secret for branch admins / admin users / delivery quick-access
+const UNIVERSAL_SECRET = process.env.UNIVERSAL_SECRET || "Downtown2026";
+
 const BRANCH_SEED = [
   {
     name: "Union Trade Centre",
     location: "3336+MHV Union Trade Centre, 1 KN 4 Ave, Kigali",
-    admin_secret: "UTC2026",
+    admin_secret: UNIVERSAL_SECRET,
   },
   {
     name: "KN 5 Road",
     location: "KN 5 Rd, Kigali",
-    admin_secret: "KN5Road2026",
+    admin_secret: UNIVERSAL_SECRET,
   },
   {
     name: "KG 541 Street",
     location: "KG 541 St, Kigali",
-    admin_secret: "KG5412026",
+    admin_secret: UNIVERSAL_SECRET,
   },
   {
     name: "Nyamirambo",
     location: "24Q5+R2R, Kigali",
-    admin_secret: "Nyamirambo2026",
+    admin_secret: UNIVERSAL_SECRET,
   },
   {
     name: "Kimironko",
     location: "24XF+XVV, KG 192 St, Kigali",
-    admin_secret: "Kimironko2026",
+    admin_secret: UNIVERSAL_SECRET,
   },
   {
     name: "Cosmos Area",
     location: "23H4+26V, Kigali",
-    admin_secret: "Cosmos2026",
+    admin_secret: UNIVERSAL_SECRET,
   },
   {
     name: "Kigali Central East",
     location: "24G3+MCV, Kigali",
-    admin_secret: "CentralEast2026",
+    admin_secret: UNIVERSAL_SECRET,
   },
   {
     name: "KK 35 Avenue",
     location: "KK 35 Ave, Kigali",
-    admin_secret: "KK35Ave2026",
+    admin_secret: UNIVERSAL_SECRET,
   },
   {
     name: "City Link",
     location: "24J3+Q3, Kigali",
-    admin_secret: "CityLink2026",
+    admin_secret: UNIVERSAL_SECRET,
   },
   {
     name: "Gisenyi",
     location: "8754+P7W, Gisenyi",
-    admin_secret: "Gisenyi2026",
+    admin_secret: UNIVERSAL_SECRET,
   },
 ];
 
@@ -120,7 +123,7 @@ const BRANCH_SEED = [
 const ADMIN_USERS = [
   {
     email: "admin@test.com",
-    password: "password123",
+    password: UNIVERSAL_SECRET,
     // default branch for this admin (use a matching location from BRANCH_SEED)
     branch_location: "3336+MHV Union Trade Centre, 1 KN 4 Ave, Kigali",
   },

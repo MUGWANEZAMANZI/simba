@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 
-export default function OrderTracker({ order, onBack }) {
+export default function OrderTracker({ order, onBack, t }) {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState("Preparing your order...");
   const deliveredNotifiedRef = useRef(false);
@@ -100,8 +100,8 @@ export default function OrderTracker({ order, onBack }) {
   return (
     <div className="order-tracker">
       <div className="tracker-header">
-        <button onClick={onBack} className="ghost-button">← Back</button>
-        <h2>Tracking Order #{order.id}</h2>
+        <button onClick={onBack} className="ghost-button">← {t?.backToShop || 'Back'}</button>
+        <h2>{(t && t.trackingOrder) ? `${t.trackingOrder} #${order.id}` : `Tracking Order #${order.id}`}</h2>
       </div>
 
       <div className="tracker-content card">
@@ -110,7 +110,7 @@ export default function OrderTracker({ order, onBack }) {
             <div className="progress-fill" style={{ width: `${progress}%` }} />
           </div>
           <p className="status-text">{status}</p>
-          <p className="progress-percent">{progress}% Complete</p>
+          <p className="progress-percent">{progress}% {(t && t.completeLabel) || 'Complete'}</p>
         </div>
 
         <div className="order-summary-mini" style={{ marginTop: "2rem" }}>

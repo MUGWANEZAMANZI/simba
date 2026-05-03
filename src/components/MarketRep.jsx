@@ -46,11 +46,11 @@ export default function MarketRep({ branch, onBack, onLogout, t, formatCurrency 
         <div className="market-rep-portal">
             <div className="admin-header">
                 <button onClick={onBack} className="ghost-button">← {t.backToShop || 'Back to Shop'}</button>
-                <h2>{branch?.name || 'Branch'} — Market Rep</h2>
+                <h2>{branch?.name ? `${branch.name} — ${t.marketRepTitle || 'Market Rep'}` : (t.marketRepTitle || 'Market Rep')}</h2>
                 <div className="admin-header-meta">
                     <span>{branch?.location}</span>
                     {onLogout ? (
-                        <button onClick={onLogout} className="ghost-button">Logout</button>
+                        <button onClick={onLogout} className="ghost-button">{t.logout || 'Logout'}</button>
                     ) : null}
                 </div>
             </div>
@@ -58,21 +58,21 @@ export default function MarketRep({ branch, onBack, onLogout, t, formatCurrency 
             {error ? <p className="admin-auth-error">{error}</p> : null}
 
             <div className="card">
-                <h3>Incoming Orders</h3>
+                <h3>{t.incomingOrders || 'Incoming Orders'}</h3>
                 {loading ? (
-                    <p>Loading orders…</p>
+                    <p>{t.loading || 'Loading orders…'}</p>
                 ) : orders.length === 0 ? (
-                    <p>{t.emptyCart || 'No orders for this branch.'}</p>
+                    <p>{t.noOrdersForBranch || 'No orders for this branch.'}</p>
                 ) : (
                     <table className="admin-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
-                                <th>Customer</th>
-                                <th>Total</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                                <th>Date</th>
+                                <th>{t.tableId || 'ID'}</th>
+                                <th>{t.tableCustomer || 'Customer'}</th>
+                                <th>{t.tableTotal || 'Total'}</th>
+                                <th>{t.tableStatus || 'Status'}</th>
+                                <th>{t.tableActions || 'Actions'}</th>
+                                <th>{t.tableDate || 'Date'}</th>
                             </tr>
                         </thead>
                         <tbody>

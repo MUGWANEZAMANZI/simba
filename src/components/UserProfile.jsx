@@ -23,29 +23,29 @@ export default function UserProfile({ phone, onLogout, t, formatCurrency }) {
       .catch(() => setLoading(false));
   }, [phone]);
 
-  if (loading) return <div className="p-8 text-center">Loading profile...</div>;
-  if (!data?.account) return <div className="p-8 text-center">Profile not found.</div>;
+  if (loading) return <div className="p-8 text-center">{t.loadingProfile || 'Loading profile...'}</div>;
+  if (!data?.account) return <div className="p-8 text-center">{t.profileNotFound || 'Profile not found.'}</div>;
 
   const orders = Array.isArray(data.orders) ? data.orders : [];
 
   return (
     <div className="user-profile">
       <div className="profile-header">
-        <h2>My Profile</h2>
-        <button onClick={onLogout} className="secondary-button">Logout</button>
+        <h2>{t.myProfile || 'My Profile'}</h2>
+        <button onClick={onLogout} className="secondary-button">{t.logout || 'Logout'}</button>
       </div>
 
       <div className="profile-details card">
         <h3>{data.account.full_name}</h3>
-        <p><strong>Phone:</strong> {data.account.phone}</p>
-        <p><strong>Address:</strong> {data.account.address}, {data.account.district}</p>
-        <p><strong>Member since:</strong> {new Date(data.account.created_at).toLocaleDateString()}</p>
+        <p><strong>{t.phoneLabel || 'Phone:'}</strong> {data.account.phone}</p>
+        <p><strong>{t.addressLabel || 'Address:'}</strong> {data.account.address}, {data.account.district}</p>
+        <p><strong>{t.memberSinceLabel || 'Member since:'}</strong> {new Date(data.account.created_at).toLocaleDateString()}</p>
       </div>
 
       <div className="order-history">
-        <h3>Order History</h3>
+        <h3>{t.orderHistory || 'Order History'}</h3>
         {orders.length === 0 ? (
-          <p>No orders yet.</p>
+          <p>{t.noOrdersYet || 'No orders yet.'}</p>
         ) : (
           <div className="order-list">
             {orders.map((order) => {
@@ -63,15 +63,15 @@ export default function UserProfile({ phone, onLogout, t, formatCurrency }) {
                     </span>
                   </div>
                   <div className="order-card-body">
-                    <p>{order?.created_at ? new Date(order.created_at).toLocaleString() : "Unknown date"}</p>
-                    <p>Total: {formatCurrency(Number(order?.total || 0), t.locale, t.currency)}</p>
-                    <p>{getItemsCount(order?.items_json)} items</p>
+                    <p>{order?.created_at ? new Date(order.created_at).toLocaleString() : (t.unknownLabel || 'Unknown date')}</p>
+                    <p>{t.totalLabel || 'Total'}: {formatCurrency(Number(order?.total || 0), t.locale, t.currency)}</p>
+                    <p>{getItemsCount(order?.items_json)} {t.items || 'items'}</p>
                   </div>
                   <button
                     className="ghost-button"
                     onClick={() => window.location.hash = `track-${order.id}`}
                   >
-                    Track Order
+                    {t.trackOrder || 'Track Order'}
                   </button>
                 </div>
               );

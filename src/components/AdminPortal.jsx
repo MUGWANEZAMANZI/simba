@@ -88,12 +88,12 @@ export default function AdminPortal({ onBack, onLogout, adminName, branchId, t, 
   return (
     <div className="admin-portal">
       <div className="admin-header">
-        <button onClick={onBack} className="ghost-button">← Back to Shop</button>
-        <h2>Admin Management</h2>
+        <button onClick={onBack} className="ghost-button">← {t.backToShop || 'Back to Shop'}</button>
+        <h2>{t.adminManagement || 'Admin Management'}</h2>
         <div className="admin-header-meta">
-          <span>{adminName ? `Admin: ${adminName}` : "Admin"}</span>
+          <span>{adminName ? `${t.adminLabel || 'Admin'}: ${adminName}` : t.adminLabel || 'Admin'}</span>
           {onLogout ? (
-            <button onClick={onLogout} className="ghost-button">Logout</button>
+            <button onClick={onLogout} className="ghost-button">{t.logout || 'Logout'}</button>
           ) : null}
         </div>
       </div>
@@ -101,33 +101,33 @@ export default function AdminPortal({ onBack, onLogout, adminName, branchId, t, 
       {loadError ? <p className="admin-auth-error">{loadError}</p> : null}
 
       <div className="admin-tabs">
-        <button className={activeTab === "orders" ? "active" : ""} onClick={() => setActiveTab("orders")}>Orders</button>
-        <button className={activeTab === "users" ? "active" : ""} onClick={() => setActiveTab("users")}>Users</button>
-        <button className={activeTab === "inventory" ? "active" : ""} onClick={() => setActiveTab("inventory")}>Inventory</button>
+        <button className={activeTab === "orders" ? "active" : ""} onClick={() => setActiveTab("orders")}>{t.ordersTab || 'Orders'}</button>
+        <button className={activeTab === "users" ? "active" : ""} onClick={() => setActiveTab("users")}>{t.usersTab || 'Users'}</button>
+        <button className={activeTab === "inventory" ? "active" : ""} onClick={() => setActiveTab("inventory")}>{t.inventoryTab || 'Inventory'}</button>
       </div>
 
       <div className="admin-content card">
         <div className="delivery-stats-grid" style={{ marginBottom: "1rem" }}>
-          <article className="card delivery-stat-card"><strong>{stats.totalOrders}</strong><span>Total Orders</span></article>
-          <article className="card delivery-stat-card"><strong>{stats.activeDeliveries}</strong><span>Active Delivery</span></article>
-          <article className="card delivery-stat-card"><strong>{stats.delivered}</strong><span>Delivered</span></article>
-          <article className="card delivery-stat-card"><strong>{stats.customers}</strong><span>Customers</span></article>
+          <article className="card delivery-stat-card"><strong>{stats.totalOrders}</strong><span>{t.totalOrdersLabel || 'Total Orders'}</span></article>
+          <article className="card delivery-stat-card"><strong>{stats.activeDeliveries}</strong><span>{t.activeDeliveriesLabel || 'Active Delivery'}</span></article>
+          <article className="card delivery-stat-card"><strong>{stats.delivered}</strong><span>{t.deliveredLabel || 'Delivered'}</span></article>
+          <article className="card delivery-stat-card"><strong>{stats.customers}</strong><span>{t.customersLabel || 'Customers'}</span></article>
         </div>
 
         {activeTab === "orders" && (
           <div className="admin-section">
-            <h3>Recent Orders</h3>
+            <h3>{t.recentOrders || 'Recent Orders'}</h3>
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Customer</th>
-                  <th>Total</th>
-                  <th>Provider</th>
-                  <th>Owner</th>
-                  <th>Status</th>
-                  <th>Update</th>
-                  <th>Date</th>
+                  <th>{t.tableId || 'ID'}</th>
+                  <th>{t.tableCustomer || 'Customer'}</th>
+                  <th>{t.tableTotal || 'Total'}</th>
+                  <th>{t.tableProvider || 'Provider'}</th>
+                  <th>{t.tableOwner || 'Owner'}</th>
+                  <th>{t.tableStatus || 'Status'}</th>
+                  <th>{t.tableUpdate || 'Update'}</th>
+                  <th>{t.tableDate || 'Date'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -169,28 +169,28 @@ export default function AdminPortal({ onBack, onLogout, adminName, branchId, t, 
 
         {activeTab === "users" && (
           <div className="admin-section">
-            <h3>Customers</h3>
+            <h3>{t.customersTitle || 'Customers'}</h3>
             <table className="admin-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Phone</th>
-                  <th>Address</th>
-                  <th>Last Order</th>
+                  <th>{t.nameLabel || 'Name'}</th>
+                  <th>{t.phoneLabel || 'Phone'}</th>
+                  <th>{t.addressLabel || 'Address'}</th>
+                  <th>{t.lastOrderLabel || 'Last Order'}</th>
                 </tr>
               </thead>
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan="4">No users found.</td>
+                    <td colSpan="4">{t.noUsersFound || 'No users found.'}</td>
                   </tr>
                 ) : (
                   users.map((u) => (
                     <tr key={u.id}>
-                      <td>{u.full_name || "Unknown"}</td>
-                      <td>{u.phone || "N/A"}</td>
-                      <td>{u.address || "N/A"}</td>
-                      <td>{u.last_order_at ? new Date(u.last_order_at).toLocaleDateString() : "Unknown"}</td>
+                      <td>{u.full_name || t.unknownLabel || 'Unknown'}</td>
+                      <td>{u.phone || 'N/A'}</td>
+                      <td>{u.address || 'N/A'}</td>
+                      <td>{u.last_order_at ? new Date(u.last_order_at).toLocaleDateString() : t.unknownLabel || 'Unknown'}</td>
                     </tr>
                   ))
                 )}
@@ -202,8 +202,8 @@ export default function AdminPortal({ onBack, onLogout, adminName, branchId, t, 
         {activeTab === "inventory" && (
           <div className="admin-section">
             <div className="inventory-header">
-              <h3>Branch Inventory</h3>
-              <p>Current stock levels for {adminName}</p>
+              <h3>{t.branchInventoryTitle || 'Branch Inventory'}</h3>
+              <p>{t.currentStockFor || 'Current stock levels for'} {adminName}</p>
             </div>
             <table className="admin-table">
               <thead>
@@ -236,55 +236,55 @@ export default function AdminPortal({ onBack, onLogout, adminName, branchId, t, 
               </tbody>
             </table>
 
-            <h3 style={{ marginTop: '2rem' }}>Add New Product</h3>
+            <h3 style={{ marginTop: '2rem' }}>{t.addNewProductTitle || 'Add New Product'}</h3>
             <form onSubmit={handleAddProduct} className="admin-form">
               <input
                 type="text"
-                placeholder="Product Name"
+                placeholder={t.productNamePlaceholder || 'Product Name'}
                 value={newProduct.name}
                 onChange={e => setNewProduct({ ...newProduct, name: e.target.value })}
                 required
               />
               <input
                 type="number"
-                placeholder="Price (RWF)"
+                placeholder={t.pricePlaceholder || 'Price (RWF)'}
                 value={newProduct.price}
                 onChange={e => setNewProduct({ ...newProduct, price: Number(e.target.value) })}
                 required
               />
               <input
                 type="text"
-                placeholder="Category (e.g. Food Products)"
+                placeholder={t.categoryPlaceholder || 'Category (e.g. Food Products)'}
                 value={newProduct.category}
                 onChange={e => setNewProduct({ ...newProduct, category: e.target.value })}
                 required
               />
               <input
                 type="text"
-                placeholder="Unit (e.g. Pcs, Kg)"
+                placeholder={t.unitPlaceholder || 'Unit (e.g. Pcs, Kg)'}
                 value={newProduct.unit}
                 onChange={e => setNewProduct({ ...newProduct, unit: e.target.value })}
                 required
               />
               <input
                 type="text"
-                placeholder="Location (e.g. Kigali Warehouse, Aisle 3)"
+                placeholder={t.locationPlaceholder || 'Location (e.g. Kigali Warehouse, Aisle 3)'}
                 value={newProduct.location}
                 onChange={e => setNewProduct({ ...newProduct, location: e.target.value })}
                 required
               />
               <input
                 type="url"
-                placeholder="Cloud image URL"
+                placeholder={t.imagePlaceholder || 'Cloud image URL'}
                 value={newProduct.image}
                 onChange={e => setNewProduct({ ...newProduct, image: e.target.value })}
                 required
               />
               <p className="hero-meta admin-form-note">
-                Upload the image to a cloud service first, then paste the public link here.
+                {t.uploadImageNote || 'Upload the image to a cloud service first, then paste the public link here.'}
               </p>
               <button type="submit" className="primary-button" disabled={loading}>
-                {loading ? "Adding..." : "Add Product"}
+                {loading ? (t.addingProduct || 'Adding...') : (t.addProduct || 'Add Product')}
               </button>
             </form>
           </div>
