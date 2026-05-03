@@ -93,7 +93,12 @@ img {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  padding: 0.7rem 0 0.35rem;
+  padding: 0.4rem 0 0.15rem;
+}
+
+.topbar h1 {
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 0.98;
 }
 
 .topbar h1,
@@ -155,12 +160,12 @@ img {
 }
 
 .page {
-  padding: 0.35rem 0 3rem;
+  padding: 0.2rem 0 2.25rem;
 }
 
 .hero {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.55rem;
   align-items: stretch;
 }
 
@@ -181,13 +186,13 @@ img {
 
 .hero-copy {
   border-radius: 30px;
-  padding: 1.05rem 1.15rem;
+  padding: 0.8rem 0.95rem;
 }
 
 .hero-copy h2 {
-  font-size: clamp(2rem, 6.2vw, 3.7rem);
-  line-height: 0.95;
-  margin: 0.55rem 0 0.75rem;
+  font-size: clamp(1.7rem, 4.7vw, 2.9rem);
+  line-height: 0.93;
+  margin: 0.4rem 0 0.55rem;
 }
 
 .hero-copy p {
@@ -197,19 +202,19 @@ img {
 .hero-search {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 0.85rem;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
 }
 
 .hero-search-actions {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.55rem;
 }
 
 .hero-card {
-  min-height: 210px;
+  min-height: 168px;
   border-radius: 30px;
-  padding: 1.1rem;
+  padding: 0.85rem;
   display: flex;
   flex-direction: column;
   justify-content: end;
@@ -219,7 +224,7 @@ img {
 }
 
 .hero-card strong {
-  font-size: 1.8rem;
+  font-size: 1.45rem;
 }
 
 .categories-panel,
@@ -227,8 +232,8 @@ img {
 .controls,
 .related-section {
   border-radius: 24px;
-  padding: 0.95rem;
-  margin-top: 0.7rem;
+  padding: 0.72rem;
+  margin-top: 0.55rem;
 }
 
 .recommendation-panel-feature {
@@ -305,18 +310,18 @@ img {
   justify-content: space-between;
   gap: 1rem;
   align-items: end;
-  margin-bottom: 1rem;
+  margin-bottom: 0.65rem;
 }
 
 .category-strip {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 0.6rem;
 }
 
 .category-card {
-  min-height: 112px;
-  padding: 0.8rem;
+  min-height: 96px;
+  padding: 0.7rem;
   border-radius: 22px;
   display: flex;
   flex-direction: column;
@@ -363,8 +368,8 @@ img {
 
 .recommendation-grid {
   display: grid;
-  gap: 0.75rem;
-  margin-top: 0.8rem;
+  gap: 0.6rem;
+  margin-top: 0.65rem;
 }
 
 .recommendation-card {
