@@ -181,64 +181,6 @@ try {
   console.error("Failed to seed inventory:", err);
 }
 
-// Seed a few demo orders so the market rep dashboard always has incoming work to display.
-try {
-  const orderCount = db.prepare("SELECT COUNT(*) AS count FROM orders").get().count;
-  if (orderCount === 0) {
-    const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
-    const branches = db.prepare("SELECT id, name FROM branches ORDER BY id ASC").all();
-    const sampleBranch = branches.find((branch) => branch.name === "Union Trade Centre") || branches[0];
-    const sampleProducts = data.products.slice(0, 6);
-    const timestamp = new Date().toISOString();
-    const demoItems = sampleProducts.slice(0, 3).map((product, index) => ({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: index + 1,
-    }));
-
-    insertOrder.run({
-      branch_id: sampleBranch?.id || null,
-      customer_name: "Demo Customer",
-      phone: "0788000000",
-      address: "Kigali",
-      district: "Gasabo",
-      payment_method: "momo",
-      delivery_provider: "simba-express",
-      delivery_fee: 500,
-      latitude: null,
-      longitude: null,
-      items_json: JSON.stringify(demoItems),
-      subtotal: 25000,
-      total: 25500,
-      created_at: timestamp,
-    });
-
-    insertOrder.run({
-      branch_id: sampleBranch?.id || null,
-      customer_name: "Demo Buyer",
-      phone: "0788111111",
-      address: "Kacyiru",
-      district: "Gasabo",
-      payment_method: "cash",
-      delivery_provider: "tuma250",
-      delivery_fee: 700,
-      latitude: null,
-      longitude: null,
-      items_json: JSON.stringify(demoItems.slice(0, 2)),
-      subtotal: 18200,
-      total: 18900,
-      created_at: timestamp,
-    });
-
-    db.prepare("UPDATE orders SET status = ? WHERE id = ?").run("accepted", 1);
-    db.prepare("UPDATE orders SET status = ? WHERE id = ?").run("preparing", 2);
-    console.log("Seeded demo orders for the market rep dashboard.");
-  }
-} catch (err) {
-  console.error("Failed to seed demo orders:", err);
-}
-
 const upsertAccount = db.prepare(`
   INSERT INTO accounts (
     full_name, phone, address, district, latitude, longitude, created_at, last_order_at
@@ -263,6 +205,64 @@ const insertOrder = db.prepare(`
     @delivery_provider, @delivery_fee, @latitude, @longitude, @items_json, @subtotal, @total, @created_at
   )
 `);
+
+// Seed a few demo orders so the market rep dashboard always has incoming work to display.
+try {
+  const orderCount = db.prepare("SELECT COUNT(*) AS count FROM orders").get().count;
+  if (orderCount === 0) {
+    const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
+    const branches = db.prepare("SELECT id, name FROM branches ORDER BY id ASC").all();
+    const sampleBranch = branches.find((branch) => branch.name === "Union Trade Centre") || branches[0];
+    const sampleProducts = data.products.slice(0, 6);
+    const timestamp = new Date().toISOString();
+    const demoItems = sampleProducts.slice(0, 3).map((product, index) => ({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: index + 1,
+    }));
+
+    const first = insertOrder.run({
+      branch_id: sampleBranch?.id || null,
+      customer_name: "Demo Customer",
+      phone: "0788000000",
+      address: "Kigali",
+      district: "Gasabo",
+      payment_method: "momo",
+      delivery_provider: "simba-express",
+      delivery_fee: 500,
+      latitude: null,
+      longitude: null,
+      items_json: JSON.stringify(demoItems),
+      subtotal: 25000,
+      total: 25500,
+      created_at: timestamp,
+    });
+
+    const second = insertOrder.run({
+      branch_id: sampleBranch?.id || null,
+      customer_name: "Demo Buyer",
+      phone: "0788111111",
+      address: "Kacyiru",
+      district: "Gasabo",
+      payment_method: "cash",
+      delivery_provider: "tuma250",
+      delivery_fee: 700,
+      latitude: null,
+      longitude: null,
+      items_json: JSON.stringify(demoItems.slice(0, 2)),
+      subtotal: 18200,
+      total: 18900,
+      created_at: timestamp,
+    });
+
+    db.prepare("UPDATE orders SET status = ? WHERE id = ?").run("accepted", first.lastInsertRowid);
+    db.prepare("UPDATE orders SET status = ? WHERE id = ?").run("preparing", second.lastInsertRowid);
+    console.log("Seeded demo orders for the market rep dashboard.");
+  }
+} catch (err) {
+  console.error("Failed to seed demo orders:", err);
+}
 
 const app = express();
 app.use(express.json({ limit: "1mb" }));

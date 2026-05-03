@@ -134,6 +134,7 @@ const languages = {
     switchLanguage: "Switch language",
     languageHint: "Choose English, French, or Kinyarwanda",
     adminNav: "Admin",
+    marketNav: "Market Rep",
     deliveryNav: "Delivery",
     profileNav: "Profile",
     changeBranch: "Change branch",
@@ -156,6 +157,7 @@ const languages = {
     branchStaffHint: "Enter branch name and secret code to manage incoming orders.",
     branchNamePlaceholder: "Branch name",
     openMarketRepDashboard: "Open Market Rep Dashboard",
+    openDemoMarketDashboard: "Open demo dashboard",
     recommendationKicker: "Gasuku picks",
     recommendationTitle: "Feel-based recommendations",
     recommendationPrompt: "Describe your mood or need and Gasuku will rank products from the dataset.",
@@ -171,6 +173,8 @@ const languages = {
     idLabel: "ID",
     availableLabel: "available",
     inStockLabel: "In stock",
+    sameDayLabel: "Same-day delivery",
+    ratingLabel: "customer rating",
     unavailableLabel: "Unavailable",
     previousPage: "Previous",
     nextPage: "Next",
@@ -325,6 +329,7 @@ const languages = {
     switchLanguage: "Changer de langue",
     languageHint: "Choisissez English, Français ou Kinyarwanda",
     adminNav: "Admin",
+    marketNav: "Rep marche",
     deliveryNav: "Livraison",
     profileNav: "Profil",
     changeBranch: "Changer de boutique",
@@ -347,6 +352,7 @@ const languages = {
     branchStaffHint: "Saisissez le nom de la boutique et le code secret pour gérer les commandes entrantes.",
     branchNamePlaceholder: "Nom de la boutique",
     openMarketRepDashboard: "Ouvrir le tableau de bord",
+    openDemoMarketDashboard: "Ouvrir la demo",
     recommendationKicker: "Sélections Gasuku",
     recommendationTitle: "Recommandations selon votre ressenti",
     recommendationPrompt: "Décrivez votre humeur ou votre besoin et Gasuku classera les produits du catalogue.",
@@ -362,6 +368,8 @@ const languages = {
     idLabel: "ID",
     availableLabel: "disponible",
     inStockLabel: "En stock",
+    sameDayLabel: "Livraison le jour meme",
+    ratingLabel: "avis client",
     unavailableLabel: "Indisponible",
     previousPage: "Précédent",
     nextPage: "Suivant",
@@ -516,6 +524,7 @@ const languages = {
     switchLanguage: "Hindura ururimi",
     languageHint: "Hitamo Icyongereza, Igifaransa, cyangwa Ikinyarwanda",
     adminNav: "Admin",
+    marketNav: "Market Rep",
     deliveryNav: "Iyo kohereza",
     profileNav: "Umwirondoro",
     changeBranch: "Hindura ishami",
@@ -538,6 +547,7 @@ const languages = {
     branchStaffHint: "Andika izina ry'ishami na kode y'ibanga kugira ngo ucunge amategeko mashya.",
     branchNamePlaceholder: "Izina ry'ishami",
     openMarketRepDashboard: "Fungura Market Rep Dashboard",
+    openDemoMarketDashboard: "Fungura demo dashboard",
     recommendationKicker: "Gasuku picks",
     recommendationTitle: "Ibyifuzo bishingiye ku myumvire",
     recommendationPrompt: "Sobanura uko wiyumva cyangwa icyo ukeneye maze Gasuku izashyira ibicuruzwa ku murongo.",
@@ -553,6 +563,8 @@ const languages = {
     idLabel: "ID",
     availableLabel: "bihari",
     inStockLabel: "Biri mu bubiko",
+    sameDayLabel: "Gutangwa uyu munsi",
+    ratingLabel: "amanota y'abakiriya",
     unavailableLabel: "Ntibihari",
     previousPage: "Ibibanza byabanjirije",
     nextPage: "Ibikurikira",
@@ -774,6 +786,11 @@ function resolveProductImage(product) {
   return categoryImages[product.category] || product.image;
 }
 
+function getProductRating(product) {
+  const base = Number(product?.id || 0) % 7;
+  return (4.2 + base / 10).toFixed(1);
+}
+
 function tokenize(value) {
   return value.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
 }
@@ -992,7 +1009,11 @@ function App() {
   const [deliveryProviderLogin, setDeliveryProviderLogin] = useState("simba-express");
   const [deliveryAuthorized, setDeliveryAuthorized] = useState(false);
   const [deliveryError, setDeliveryError] = useState("");
-  const [marketAuthorized, setMarketAuthorized] = useState(false);
+  const [marketBranch, setMarketBranch] = usePersistentState("simba-market-branch", null);
+  const [marketAuthorized, setMarketAuthorized] = useState(() => {
+    const saved = localStorage.getItem("simba-market-branch");
+    return Boolean(saved && saved !== "null");
+  });
   const [marketName, setMarketName] = useState("");
   const [marketCode, setMarketCode] = useState("");
   const [marketError, setMarketError] = useState("");
@@ -1068,7 +1089,7 @@ function App() {
 
   const selectedProduct = useMemo(() => {
     return normalizeProducts.find((product) => product.id === selectedProductId) ?? null;
-  }, [selectedProductId]);
+  }, [normalizeProducts, selectedProductId]);
 
   const filteredProducts = useMemo(() => {
     const value = search.trim().toLowerCase();
@@ -1121,7 +1142,13 @@ function App() {
       });
 
     return results;
-  }, [category, search, sortBy, stockOnly]);
+  }, [category, normalizeProducts, search, sortBy, stockOnly]);
+
+  useEffect(() => {
+    if (currentPage > 1 && filteredProducts.length === 0) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, filteredProducts.length]);
 
   const featuredCategories = useMemo(
     () =>
@@ -1133,7 +1160,7 @@ function App() {
           image: categoryImages[item],
           count: normalizeProducts.filter((product) => product.category === item).length,
         })),
-    [categories, translateCategory],
+    [categories, normalizeProducts, translateCategory],
   );
 
   const relatedProducts = useMemo(() => {
@@ -1144,7 +1171,7 @@ function App() {
           product.category === selectedProduct.category && product.id !== selectedProduct.id,
       )
       .slice(0, 4);
-  }, [selectedProduct]);
+  }, [normalizeProducts, selectedProduct]);
 
   const cartItems = useMemo(
     () =>
@@ -1154,7 +1181,7 @@ function App() {
           return product ? { ...product, quantity } : null;
         })
         .filter(Boolean),
-    [cart],
+    [cart, normalizeProducts],
   );
 
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -1436,7 +1463,7 @@ function App() {
 
       const branch = await response.json();
       setMarketAuthorized(true);
-      localStorage.setItem("simba-market-branch", JSON.stringify(branch));
+      setMarketBranch(branch);
       setMarketCode("");
       setMarketError("");
     } catch (err) {
@@ -1444,12 +1471,32 @@ function App() {
     }
   }
 
+  function openDemoMarketDashboard() {
+    const demoBranch =
+      branches.find((branch) => branch.name === "Union Trade Centre") ||
+      selectedBranch ||
+      branches[0] ||
+      null;
+
+    if (!demoBranch) {
+      setMarketError(t.loadingInventory);
+      window.location.hash = "market";
+      return;
+    }
+
+    setMarketBranch(demoBranch);
+    setMarketAuthorized(true);
+    setMarketName(demoBranch.name);
+    setMarketError("");
+    window.location.hash = "market";
+  }
+
   function handleMarketLogout() {
     setMarketAuthorized(false);
     setMarketName("");
     setMarketCode("");
     setMarketError("");
-    localStorage.removeItem("simba-market-branch");
+    setMarketBranch(null);
     window.location.hash = "";
   }
 
@@ -1495,6 +1542,7 @@ function App() {
             <button className="ghost-button" onClick={() => setSelectedBranch(null)}>{t.changeBranch}</button>
           )}
           <button className="ghost-button" onClick={() => window.location.hash = 'admin'}>{t.adminNav}</button>
+          <button className="ghost-button" onClick={openDemoMarketDashboard}>{t.marketNav}</button>
           <button className="ghost-button" onClick={() => window.location.hash = 'delivery'}>{t.deliveryNav}</button>
           {loggedInPhone && (
             <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>{t.profileNav}</button>
@@ -1656,11 +1704,11 @@ function App() {
             )}
 
             {view === "market" && (
-              marketAuthorized ? (
+              marketAuthorized && marketBranch ? (
                 <MarketRep
                   onBack={() => window.location.hash = ""}
                   onLogout={handleMarketLogout}
-                  branch={JSON.parse(localStorage.getItem("simba-market-branch") || "null")}
+                  branch={marketBranch}
                   t={t}
                   formatCurrency={formatCurrency}
                 />
@@ -1686,6 +1734,9 @@ function App() {
                     {marketError ? <p className="admin-auth-error">{marketError}</p> : null}
                     <div className="admin-auth-actions">
                       <button type="submit">{t.openMarketRepDashboard}</button>
+                      <button type="button" className="secondary-button" onClick={openDemoMarketDashboard}>
+                        {t.openDemoMarketDashboard}
+                      </button>
                       <button type="button" className="ghost-button" onClick={() => window.location.hash = ""}>
                         {t.backToShop}
                       </button>
@@ -1858,7 +1909,13 @@ function App() {
                             </option>
                           ))}
                       </select>
-                      <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                      <select
+                        value={sortBy}
+                        onChange={(event) => {
+                          setSortBy(event.target.value);
+                          setCurrentPage(1);
+                        }}
+                      >
                         {sortOptions.map((option) => (
                           <option key={option} value={option}>
                             {option === "name"
@@ -1873,7 +1930,10 @@ function App() {
                         <input
                           type="checkbox"
                           checked={stockOnly}
-                          onChange={(event) => setStockOnly(event.target.checked)}
+                          onChange={(event) => {
+                            setStockOnly(event.target.checked);
+                            setCurrentPage(1);
+                          }}
                         />
                         {t.inStockOnly}
                       </label>
@@ -1884,6 +1944,7 @@ function App() {
                           setSearch("");
                           setStockOnly(false);
                           setSortBy("name");
+                          setCurrentPage(1);
                           updateQuery({ category: null, product: null });
                         }}
                       >
@@ -1901,16 +1962,26 @@ function App() {
                               <img src={resolveProductImage(product)} alt={product.name} loading="lazy" />
                             </button>
                             <div className="product-body">
-                              <p className="product-category">{translateCategory(product.category)}</p>
+                              <div className="product-card-topline">
+                                <p className="product-category">{translateCategory(product.category)}</p>
+                                <span className={product.inStock ? "stock-chip" : "stock-chip muted"}>
+                                  {product.inStock ? t.inStockLabel : t.unavailableLabel}
+                                </span>
+                              </div>
                               <button className="product-name" onClick={() => openProduct(product)}>
                                 {product.name}
                               </button>
+                              <div className="rating-row" aria-label={`${getProductRating(product)} ${t.ratingLabel}`}>
+                                <span>★★★★★</span>
+                                <small>{getProductRating(product)}</small>
+                              </div>
                               <div className="product-meta">
-                                <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
+                                <span className="product-price">{formatCurrency(product.price, t.locale, t.currency)}</span>
                                 <small>
                                   {product.quantity} {product.unit} {t.availableLabel}
                                 </small>
                               </div>
+                              <p className="delivery-line">{t.sameDayLabel}</p>
                             </div>
                             <div className="product-actions">
                               <button className="secondary-button" onClick={() => openProduct(product)}>
@@ -1957,6 +2028,10 @@ function App() {
                         <div className="detail-copy">
                           <p className="product-category">{translateCategory(selectedProduct.category)}</p>
                           <h3>{selectedProduct.name}</h3>
+                          <div className="rating-row detail-rating" aria-label={`${getProductRating(selectedProduct)} ${t.ratingLabel}`}>
+                            <span>★★★★★</span>
+                            <small>{getProductRating(selectedProduct)} {t.ratingLabel}</small>
+                          </div>
                           <strong>
                             {formatCurrency(selectedProduct.price, t.locale, t.currency)}
                           </strong>
