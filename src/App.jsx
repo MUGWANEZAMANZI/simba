@@ -674,6 +674,7 @@ const languages = {
 
 const paymentMethods = ["momo", "cash", "card"];
 const sortOptions = ["name", "price-asc", "price-desc"];
+const PRODUCT_PAGE_SIZE = 24;
 const HF_MODEL = import.meta.env.VITE_HF_MODEL || "CohereLabs/aya-expanse-8b";
 const HF_TOKEN = import.meta.env.VITE_HF_TOKEN;
 const DELIVERY_PROVIDERS = [
@@ -1026,26 +1027,30 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!selectedBranch && view === "home") {
+    if (view !== "home") {
+      setProductsLoading(false);
+      return;
+    }
+
+    if (!selectedBranch) {
       setProductsLoading(false);
       return;
     }
 
     setProductsLoading(true);
-    const branchQuery = selectedBranch ? `branchId=${selectedBranch.id}` : "";
-    const url = `/api/products?${branchQuery}&page=${currentPage}&limit=25`;
+    const branchQuery = selectedBranch ? `branchId=${selectedBranch.id}&` : "";
+    const url = `/api/products?${branchQuery}page=1&limit=1000`;
     fetch(url)
       .then(res => res.json())
       .then(data => {
         setProducts(data.products || []);
-        setPagination(data.pagination || { page: 1, totalPages: 1, total: 0 });
         setProductsLoading(false);
       })
       .catch(err => {
         console.error("Failed to load products:", err);
         setProductsLoading(false);
       });
-  }, [selectedBranch, view, currentPage]);
+  }, [selectedBranch, view]);
 
   const normalizeProducts = useMemo(() => {
     return products.map((product) => ({
@@ -1148,6 +1153,26 @@ function App() {
     if (currentPage > 1 && filteredProducts.length === 0) {
       setCurrentPage(1);
     }
+  }, [currentPage, filteredProducts.length]);
+
+  useEffect(() => {
+    if (category !== "All" && categories.length > 1 && !categories.includes(category)) {
+      setCategory("All");
+      updateQuery({ category: null, product: null });
+    }
+  }, [categories, category]);
+
+  const visibleProducts = useMemo(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCT_PAGE_SIZE));
+    const safePage = Math.min(currentPage, totalPages);
+    const start = (safePage - 1) * PRODUCT_PAGE_SIZE;
+    return filteredProducts.slice(start, start + PRODUCT_PAGE_SIZE);
+  }, [currentPage, filteredProducts]);
+
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PRODUCT_PAGE_SIZE));
+    setPagination({ page: Math.min(currentPage, totalPages), totalPages, total: filteredProducts.length });
+    if (currentPage > totalPages) setCurrentPage(totalPages);
   }, [currentPage, filteredProducts.length]);
 
   const featuredCategories = useMemo(
@@ -1258,6 +1283,17 @@ function App() {
     window.setTimeout(() => {
       document.getElementById("catalogue")?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 0);
+  }
+
+  function selectBranch(branch) {
+    setSelectedBranch(branch);
+    setSelectedProductId(null);
+    setCategory("All");
+    setSearch("");
+    setStockOnly(false);
+    setSortBy("name");
+    setCurrentPage(1);
+    updateQuery({ category: null, product: null });
   }
 
   function closeProduct() {
@@ -1758,7 +1794,7 @@ function App() {
                       <button
                         key={branch.id}
                         className="branch-card"
-                        onClick={() => setSelectedBranch(branch)}
+                        onClick={() => selectBranch(branch)}
                       >
                         <strong>{branch.name}</strong>
                         <span>{branch.location}</span>
@@ -1774,6 +1810,24 @@ function App() {
                 </section>
               ) : (
                 <>
+                  <nav className="marketplace-nav" aria-label={t.categories}>
+                    <button
+                      className={category === "All" ? "active" : ""}
+                      onClick={() => selectCategory("All")}
+                    >
+                      {t.allCategories}
+                    </button>
+                    {featuredCategories.slice(0, 8).map((item) => (
+                      <button
+                        key={item.name}
+                        className={item.name === category ? "active" : ""}
+                        onClick={() => selectCategory(item.name)}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </nav>
+
                   <section className="hero">
                     <div className="hero-copy">
                       <span className="pill">{t.heroBadge}</span>
@@ -1956,7 +2010,24 @@ function App() {
                   {!selectedProduct ? (
                     <>
                       <section className="product-grid">
-                        {filteredProducts.map((product) => (
+                        {visibleProducts.length === 0 ? (
+                          <div className="empty-results card">
+                            <h3>{t.noOrdersForBranch || "No products found."}</h3>
+                            <p>{t.resetFilters}</p>
+                            <button
+                              onClick={() => {
+                                setCategory("All");
+                                setSearch("");
+                                setStockOnly(false);
+                                setSortBy("name");
+                                setCurrentPage(1);
+                                updateQuery({ category: null, product: null });
+                              }}
+                            >
+                              {t.resetFilters}
+                            </button>
+                          </div>
+                        ) : visibleProducts.map((product) => (
                           <article className="product-card" key={product.id}>
                             <button className="product-image" onClick={() => openProduct(product)}>
                               <img src={resolveProductImage(product)} alt={product.name} loading="lazy" />

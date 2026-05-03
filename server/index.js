@@ -144,6 +144,10 @@ try {
     db.exec("ALTER TABLE orders ADD COLUMN delivery_owner TEXT");
     console.log("Migration: Added delivery_owner column to orders table.");
   }
+  if (!columns.some(c => c.name === "status")) {
+    db.exec("ALTER TABLE orders ADD COLUMN status TEXT NOT NULL DEFAULT 'pending'");
+    console.log("Migration: Added status column to orders table.");
+  }
 } catch (err) {
   console.error("Migration failed:", err);
 }
@@ -208,11 +212,14 @@ const insertOrder = db.prepare(`
 
 // Seed a few demo orders so the market rep dashboard always has incoming work to display.
 try {
-  const orderCount = db.prepare("SELECT COUNT(*) AS count FROM orders").get().count;
-  if (orderCount === 0) {
-    const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
-    const branches = db.prepare("SELECT id, name FROM branches ORDER BY id ASC").all();
-    const sampleBranch = branches.find((branch) => branch.name === "Union Trade Centre") || branches[0];
+  const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
+  const branches = db.prepare("SELECT id, name FROM branches ORDER BY id ASC").all();
+  const sampleBranch = branches.find((branch) => branch.name === "Union Trade Centre") || branches[0];
+  const branchOrderCount = sampleBranch?.id
+    ? db.prepare("SELECT COUNT(*) AS count FROM orders WHERE branch_id = ?").get(sampleBranch.id).count
+    : 0;
+
+  if (sampleBranch && branchOrderCount === 0) {
     const sampleProducts = data.products.slice(0, 6);
     const timestamp = new Date().toISOString();
     const demoItems = sampleProducts.slice(0, 3).map((product, index) => ({
@@ -223,7 +230,7 @@ try {
     }));
 
     const first = insertOrder.run({
-      branch_id: sampleBranch?.id || null,
+      branch_id: sampleBranch.id,
       customer_name: "Demo Customer",
       phone: "0788000000",
       address: "Kigali",
@@ -240,7 +247,7 @@ try {
     });
 
     const second = insertOrder.run({
-      branch_id: sampleBranch?.id || null,
+      branch_id: sampleBranch.id,
       customer_name: "Demo Buyer",
       phone: "0788111111",
       address: "Kacyiru",

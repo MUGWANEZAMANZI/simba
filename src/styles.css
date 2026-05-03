@@ -953,6 +953,35 @@ select {
   padding-top: 1rem;
 }
 
+.marketplace-nav {
+  position: sticky;
+  top: 0;
+  z-index: 8;
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  margin: -1rem calc(50% - 50vw) 0.85rem;
+  padding: 0.45rem max(0.75rem, calc((100vw - 1240px) / 2));
+  background: #232f3e;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.18);
+}
+
+.marketplace-nav button {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #ffffff;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.marketplace-nav button:hover,
+.marketplace-nav button.active {
+  border-color: #ffffff;
+}
+
 .hero {
   grid-template-columns: 1fr;
   gap: 0.75rem;
@@ -1015,6 +1044,22 @@ select {
 
 .product-grid {
   gap: 0.75rem;
+}
+
+.empty-results {
+  grid-column: 1 / -1;
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.empty-results button {
+  background: var(--accent);
+  border: 1px solid #d5a000;
+  color: #111827;
+  padding: 0.75rem 1rem;
+  font-weight: 800;
 }
 
 .product-card {
@@ -1091,6 +1136,66 @@ select {
   min-height: 24px;
   color: #f59e0b;
   font-size: 0.9rem;
+}
+
+.rating-meter {
+  position: relative;
+  width: 76px;
+  height: 14px;
+  background: linear-gradient(90deg, #f59e0b 0 92%, #d1d5db 92% 100%);
+  clip-path: polygon(
+    5% 0,
+    7% 34%,
+    0 34%,
+    6% 55%,
+    4% 88%,
+    10% 68%,
+    16% 88%,
+    14% 55%,
+    20% 34%,
+    13% 34%,
+    15% 0,
+    20% 34%,
+    27% 34%,
+    21% 55%,
+    23% 88%,
+    29% 68%,
+    35% 88%,
+    33% 55%,
+    39% 34%,
+    32% 34%,
+    34% 0,
+    39% 34%,
+    46% 34%,
+    40% 55%,
+    42% 88%,
+    48% 68%,
+    54% 88%,
+    52% 55%,
+    58% 34%,
+    51% 34%,
+    53% 0,
+    58% 34%,
+    65% 34%,
+    59% 55%,
+    61% 88%,
+    67% 68%,
+    73% 88%,
+    71% 55%,
+    77% 34%,
+    70% 34%,
+    72% 0,
+    77% 34%,
+    84% 34%,
+    78% 55%,
+    80% 88%,
+    86% 68%,
+    92% 88%,
+    90% 55%,
+    96% 34%,
+    89% 34%,
+    91% 0
+  );
 }
 
 .rating-row small {
