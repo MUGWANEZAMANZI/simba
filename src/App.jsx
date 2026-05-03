@@ -131,6 +131,8 @@ const languages = {
     darkMode: "Dark mode",
     lightMode: "Light mode",
     language: "Language",
+    switchLanguage: "Switch language",
+    languageHint: "Choose English, French, or Kinyarwanda",
     tagline: "Rwanda's online supermarket",
     detailBack: "Back to products",
     productInfo: "Product information",
@@ -263,6 +265,8 @@ const languages = {
     darkMode: "Mode sombre",
     lightMode: "Mode clair",
     language: "Langue",
+    switchLanguage: "Changer de langue",
+    languageHint: "Choisissez English, Français ou Kinyarwanda",
     tagline: "Le supermarché en ligne du Rwanda",
     detailBack: "Retour aux produits",
     productInfo: "Informations produit",
@@ -395,6 +399,8 @@ const languages = {
     darkMode: "Dark mode",
     lightMode: "Light mode",
     language: "Ururimi",
+    switchLanguage: "Hindura ururimi",
+    languageHint: "Hitamo Icyongereza, Igifaransa, cyangwa Ikinyarwanda",
     tagline: "Supermarket yo kuri internet mu Rwanda",
     detailBack: "Subira ku bicuruzwa",
     productInfo: "Ibisobanuro by'igicuruzwa",
@@ -1319,15 +1325,36 @@ function App() {
           {loggedInPhone && (
             <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>Profile</button>
           )}
-          <select
-            value={language}
-            onChange={(event) => setLanguage(event.target.value)}
-            aria-label={t.language}
-          >
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-            <option value="rw">Kinyarwanda</option>
-          </select>
+          <div className="language-switcher" aria-label={t.switchLanguage}>
+            <span className="language-switcher-label">{t.switchLanguage}</span>
+            <div className="language-switcher-buttons" role="group" aria-label={t.switchLanguage}>
+              <button
+                type="button"
+                className={language === "en" ? "language-chip active" : "language-chip"}
+                onClick={() => setLanguage("en")}
+                aria-pressed={language === "en"}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                className={language === "fr" ? "language-chip active" : "language-chip"}
+                onClick={() => setLanguage("fr")}
+                aria-pressed={language === "fr"}
+              >
+                Français
+              </button>
+              <button
+                type="button"
+                className={language === "rw" ? "language-chip active" : "language-chip"}
+                onClick={() => setLanguage("rw")}
+                aria-pressed={language === "rw"}
+              >
+                Kinyarwanda
+              </button>
+            </div>
+            <small className="language-switcher-hint">{t.languageHint}</small>
+          </div>
           <button
             className="ghost-button"
             onClick={() => setTheme((current) => (current === "light" ? "dark" : "light"))}

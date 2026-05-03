@@ -133,6 +133,47 @@ img {
   flex-wrap: wrap;
 }
 
+.language-switcher {
+  display: grid;
+  gap: 0.35rem;
+  align-items: start;
+}
+
+.language-switcher-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.language-switcher-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.language-chip {
+  border: 1px solid var(--line);
+  background: var(--surface-strong);
+  color: var(--text);
+  padding: 0.58rem 0.8rem;
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+.language-chip.active {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+.language-switcher-hint {
+  font-size: 0.7rem;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
 .ghost-button,
 .secondary-button {
   background: transparent;
