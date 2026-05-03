@@ -98,3 +98,8 @@ If no token is configured, the UI falls back to local recommendation scoring.
 - English, French, and Kinyarwanda UI
 - Product detail view
 - Dark mode
+
+## Test Accounts
+
+- Buyer/customer: `buyer@test.com` / `password123`
+- Admin, market rep, delivery, and branch access: `admin@test.com` / `Downtown2026`

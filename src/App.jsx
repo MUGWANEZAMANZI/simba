@@ -142,6 +142,9 @@ const languages = {
     loadingInventory: "Loading inventory...",
     branchManagementTitle: "Branch Management",
     branchManagementHint: "Enter branch name and secret code (e.g., Downtown / Downtown2026)",
+    demoAccessTitle: "Demo access",
+    demoAccessBuyer: "Buyer: buyer@test.com / password123",
+    demoAccessAdmin: "Admin, market rep, delivery, branch: Downtown / Downtown2026",
     yourNamePlaceholder: "Your name",
     secretCodePlaceholder: "Secret code",
     openAdminPortal: "Open Admin Portal",
@@ -330,6 +333,9 @@ const languages = {
     loadingInventory: "Chargement de l'inventaire...",
     branchManagementTitle: "Gestion de boutique",
     branchManagementHint: "Saisissez le nom de la boutique et le code secret (ex. Downtown / Downtown2026)",
+    demoAccessTitle: "Accès de démonstration",
+    demoAccessBuyer: "Acheteur : buyer@test.com / password123",
+    demoAccessAdmin: "Admin, livraison, boutique : Downtown / Downtown2026",
     yourNamePlaceholder: "Votre nom",
     secretCodePlaceholder: "Code secret",
     openAdminPortal: "Ouvrir le portail admin",
@@ -518,6 +524,9 @@ const languages = {
     loadingInventory: "Birimo gushyirwaho ibicuruzwa...",
     branchManagementTitle: "Ubuyobozi bw'ishami",
     branchManagementHint: "Andika izina ry'ishami na kode y'ibanga (urugero Downtown / Downtown2026)",
+    demoAccessTitle: "Kwinjira kwa demo",
+    demoAccessBuyer: "Umuguzi: buyer@test.com / password123",
+    demoAccessAdmin: "Admin, market rep, delivery, ishami: Downtown / Downtown2026",
     yourNamePlaceholder: "Izina ryawe",
     secretCodePlaceholder: "Kode y'ibanga",
     openAdminPortal: "Fungura Admin Portal",
@@ -1742,6 +1751,11 @@ function App() {
                         </div>
                       </div>
                       <p className="hero-meta">{t.deliveryPromise}</p>
+                      <div className="demo-access">
+                        <span className="demo-access-title">{t.demoAccessTitle}</span>
+                        <span>{t.demoAccessBuyer}</span>
+                        <span>{t.demoAccessAdmin}</span>
+                      </div>
                     </div>
                     <div
                       className="hero-card"
