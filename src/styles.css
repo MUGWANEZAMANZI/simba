@@ -1013,6 +1013,53 @@ select {
   background: #ffffff;
 }
 
+.hero-proof-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.language-proof {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid rgba(0, 113, 133, 0.24);
+  border-radius: 8px;
+  background: #f0f9fb;
+}
+
+.language-proof p {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.language-proof-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.language-proof-actions button {
+  border: 1px solid var(--line);
+  background: #ffffff;
+  color: var(--text);
+  padding: 0.55rem 0.7rem;
+  font-weight: 800;
+}
+
+.language-proof-actions button.active {
+  background: #232f3e;
+  border-color: #232f3e;
+  color: #ffffff;
+}
+
+.branch-language-proof {
+  max-width: 760px;
+  margin: 0 auto 1rem;
+  text-align: left;
+}
+
 .categories-panel,
 .recommendation-panel,
 .controls,
@@ -1198,6 +1245,15 @@ select {
   );
 }
 
+.rating-row > span:not(.rating-meter) {
+  width: 76px;
+  height: 14px;
+  overflow: hidden;
+  color: transparent;
+  background: linear-gradient(90deg, #f59e0b 0 92%, #d1d5db 92% 100%);
+  border-radius: 999px;
+}
+
 .rating-row small {
   color: var(--link);
   font-weight: 700;
@@ -1366,6 +1422,27 @@ select {
 
 .market-actions button {
   padding: 0.7rem 0.45rem;
+}
+
+.market-actions button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.market-success {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid #86efac;
+  border-radius: 8px;
+  background: #dcfce7;
+  color: #166534;
+  font-weight: 800;
+}
+
+@media (min-width: 760px) {
+  .hero-proof-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* Branch Selection */

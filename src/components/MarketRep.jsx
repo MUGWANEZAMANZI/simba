@@ -19,6 +19,8 @@ export default function MarketRep({ branch, onBack, onLogout, t, formatCurrency 
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [updatingId, setUpdatingId] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
 
   const load = async () => {
@@ -68,6 +70,8 @@ export default function MarketRep({ branch, onBack, onLogout, t, formatCurrency 
 
   const updateStatus = async (orderId, status) => {
     try {
+      setUpdatingId(orderId);
+      setMessage("");
       const res = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -76,15 +80,18 @@ export default function MarketRep({ branch, onBack, onLogout, t, formatCurrency 
       if (!res.ok) throw new Error("Update failed");
       const updated = await res.json();
       setOrders((cur) => cur.map((o) => (o.id === updated.id ? updated : o)));
+      setMessage(status === "accepted" ? (t.orderAccepted || "Order accepted") : (t.statusUpdated || "Status updated"));
     } catch (e) {
       setError(e.message || "Failed to update status.");
+    } finally {
+      setUpdatingId(null);
     }
   };
 
   return (
     <div className="market-rep-portal">
       <div className="admin-header market-header">
-        <button onClick={onBack} className="ghost-button">Back to shop</button>
+        <button onClick={onBack} className="ghost-button">{t.backToShop || "Back to shop"}</button>
         <div>
           <p className="eyebrow">{branch?.location}</p>
           <h2>{branch?.name ? `${branch.name} - ${t.marketRepTitle || "Market Rep"}` : (t.marketRepTitle || "Market Rep")}</h2>
@@ -98,6 +105,7 @@ export default function MarketRep({ branch, onBack, onLogout, t, formatCurrency 
       </div>
 
       {error ? <p className="admin-auth-error">{error}</p> : null}
+      {message ? <p className="market-success">{message}</p> : null}
 
       <section className="market-stats-grid">
         <article className="market-stat-card">
@@ -174,9 +182,24 @@ export default function MarketRep({ branch, onBack, onLogout, t, formatCurrency 
                     <small>{order.created_at ? new Date(order.created_at).toLocaleString(t.locale) : "-"}</small>
                   </div>
                   <div className="market-actions">
-                    <button onClick={() => updateStatus(order.id, "accepted")}>{t.accept || "Accept"}</button>
-                    <button onClick={() => updateStatus(order.id, "preparing")}>{t.preparing || "Preparing"}</button>
-                    <button onClick={() => updateStatus(order.id, "ready")}>{t.ready || "Ready"}</button>
+                    <button
+                      disabled={updatingId === order.id || order.status === "accepted"}
+                      onClick={() => updateStatus(order.id, "accepted")}
+                    >
+                      {t.acceptOrder || "Accept order"}
+                    </button>
+                    <button
+                      disabled={updatingId === order.id || order.status === "preparing"}
+                      onClick={() => updateStatus(order.id, "preparing")}
+                    >
+                      {t.markPreparing || "Mark preparing"}
+                    </button>
+                    <button
+                      disabled={updatingId === order.id || order.status === "ready"}
+                      onClick={() => updateStatus(order.id, "ready")}
+                    >
+                      {t.markReady || "Mark ready"}
+                    </button>
                   </div>
                 </article>
               );

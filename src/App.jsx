@@ -133,6 +133,13 @@ const languages = {
     language: "Language",
     switchLanguage: "Switch language",
     languageHint: "Choose English, French, or Kinyarwanda",
+    languagePanelTitle: "Shop in your language",
+    languagePanelText: "The storefront, cart, checkout, and staff dashboards can switch between English, French, and Kinyarwanda.",
+    acceptOrder: "Accept order",
+    markPreparing: "Mark preparing",
+    markReady: "Mark ready",
+    orderAccepted: "Order accepted",
+    statusUpdated: "Status updated",
     adminNav: "Admin",
     marketNav: "Market Rep",
     deliveryNav: "Delivery",
@@ -328,6 +335,13 @@ const languages = {
     language: "Langue",
     switchLanguage: "Changer de langue",
     languageHint: "Choisissez English, Français ou Kinyarwanda",
+    languagePanelTitle: "Achetez dans votre langue",
+    languagePanelText: "La boutique, le panier, le paiement et les tableaux de bord passent en anglais, français ou kinyarwanda.",
+    acceptOrder: "Accepter la commande",
+    markPreparing: "Marquer en preparation",
+    markReady: "Marquer prete",
+    orderAccepted: "Commande acceptee",
+    statusUpdated: "Statut mis a jour",
     adminNav: "Admin",
     marketNav: "Rep marche",
     deliveryNav: "Livraison",
@@ -523,6 +537,13 @@ const languages = {
     language: "Ururimi",
     switchLanguage: "Hindura ururimi",
     languageHint: "Hitamo Icyongereza, Igifaransa, cyangwa Ikinyarwanda",
+    languagePanelTitle: "Haha mu rurimi rwawe",
+    languagePanelText: "Ububiko, igare, kwishyura na dashboard z'abakozi bihinduka mu Cyongereza, Igifaransa n'Ikinyarwanda.",
+    acceptOrder: "Emeza commande",
+    markPreparing: "Shyira mu gutegurwa",
+    markReady: "Shyira kuri ready",
+    orderAccepted: "Commande yemejwe",
+    statusUpdated: "Imiterere yahinduwe",
     adminNav: "Admin",
     marketNav: "Market Rep",
     deliveryNav: "Iyo kohereza",
@@ -1071,6 +1092,16 @@ function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  useEffect(() => {
+    document.documentElement.lang = language === "rw" ? "rw" : language;
+    document.title =
+      language === "rw"
+        ? "Simba Supermarket - Guhaha kuri internet"
+        : language === "fr"
+          ? "Simba Supermarket - Boutique en ligne"
+          : "Simba Supermarket - Online shopping";
+  }, [language]);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -1789,6 +1820,21 @@ function App() {
                     <h3>{t.branchSelectionTitle}</h3>
                     <p>{t.branchSelectionHint}</p>
                   </div>
+                  <div className="language-proof branch-language-proof" data-testid="landing-language-support">
+                    <span className="demo-access-title">{t.languagePanelTitle}</span>
+                    <p>{t.languagePanelText}</p>
+                    <div className="language-proof-actions" role="group" aria-label={t.switchLanguage}>
+                      <button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>
+                        English
+                      </button>
+                      <button className={language === "fr" ? "active" : ""} onClick={() => setLanguage("fr")}>
+                        Francais
+                      </button>
+                      <button className={language === "rw" ? "active" : ""} onClick={() => setLanguage("rw")}>
+                        Kinyarwanda
+                      </button>
+                    </div>
+                  </div>
                   <div className="branch-grid">
                     {branches.map(branch => (
                       <button
@@ -1856,10 +1902,27 @@ function App() {
                         </div>
                       </div>
                       <p className="hero-meta">{t.deliveryPromise}</p>
-                      <div className="demo-access">
-                        <span className="demo-access-title">{t.demoAccessTitle}</span>
-                        <span>{t.demoAccessBuyer}</span>
-                        <span>{t.demoAccessAdmin}</span>
+                      <div className="hero-proof-grid">
+                        <div className="demo-access">
+                          <span className="demo-access-title">{t.demoAccessTitle}</span>
+                          <span>{t.demoAccessBuyer}</span>
+                          <span>{t.demoAccessAdmin}</span>
+                        </div>
+                        <div className="language-proof" data-testid="multi-language-support">
+                          <span className="demo-access-title">{t.languagePanelTitle}</span>
+                          <p>{t.languagePanelText}</p>
+                          <div className="language-proof-actions" role="group" aria-label={t.switchLanguage}>
+                            <button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>
+                              English
+                            </button>
+                            <button className={language === "fr" ? "active" : ""} onClick={() => setLanguage("fr")}>
+                              Francais
+                            </button>
+                            <button className={language === "rw" ? "active" : ""} onClick={() => setLanguage("rw")}>
+                              Kinyarwanda
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     <div
