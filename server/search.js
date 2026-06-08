@@ -1,8 +1,36 @@
-let extractorPromise = null;
-let vectorCache = {
-  key: "",
-  products: [],
-};
+import { Document } from "@langchain/core/documents";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
+import { Embeddings } from "@langchain/core/embeddings";
+
+class XenovaEmbeddings extends Embeddings {
+  constructor() {
+    super({});
+    this.extractorPromise = null;
+  }
+
+  async getExtractor() {
+    if (!this.extractorPromise) {
+      const { pipeline } = await import("@xenova/transformers");
+      this.extractorPromise = pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2");
+    }
+    return this.extractorPromise;
+  }
+
+  async embedDocuments(texts) {
+    const extractor = await this.getExtractor();
+    return Promise.all(texts.map((text) => this.embedQuery(text)));
+  }
+
+  async embedQuery(text) {
+    const extractor = await this.getExtractor();
+    const output = await extractor(text, { pooling: "mean", normalize: true });
+    return Array.from(output.data);
+  }
+}
+
+const embeddings = new XenovaEmbeddings();
+let vectorStore = null;
+let lastIndexedKey = "";
 
 function normalizeText(value) {
   return String(value || "")
@@ -15,28 +43,15 @@ function productSearchText(product) {
   return [
     product.name,
     product.category,
-    product.unit,
+    `Price: ${product.price} RWF`,
+    `Unit: ${product.unit}`,
     product.subcategory,
     product.brand,
     Array.isArray(product.tags) ? product.tags.join(" ") : "",
+    product.location ? `Location: ${product.location}` : "",
   ]
     .filter(Boolean)
-    .join(" ");
-}
-
-function cosineSimilarity(vecA, vecB) {
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < vecA.length; i += 1) {
-    dotProduct += vecA[i] * vecB[i];
-    normA += vecA[i] * vecA[i];
-    normB += vecB[i] * vecB[i];
-  }
-
-  if (!normA || !normB) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    .join(" | ");
 }
 
 function lexicalScore(query, product) {
@@ -67,39 +82,34 @@ function fallbackSearch(query, products, limit) {
     .slice(0, limit);
 }
 
-async function getExtractor() {
-  if (!extractorPromise) {
-    extractorPromise = import("@xenova/transformers").then(({ pipeline }) =>
-      pipeline("feature-extraction", "Xenova/all-MiniLM-L6-v2"),
-    );
+async function getVectorStore(products) {
+  const cacheKey = products.map((p) => `${p.id}:${p.name}`).join("|");
+  
+  if (vectorStore && lastIndexedKey === cacheKey) {
+    return vectorStore;
   }
 
-  return extractorPromise;
-}
+  const documents = products.map((product) => {
+    return new Document({
+      pageContent: productSearchText(product),
+      metadata: { ...product },
+    });
+  });
 
-async function embedText(extractor, text) {
-  const output = await extractor(text, { pooling: "mean", normalize: true });
-  return Array.from(output.data);
-}
-
-async function buildVectorIndex(products) {
-  const cacheKey = products.map((product) => `${product.id}:${product.name}`).join("|");
-  if (vectorCache.key === cacheKey) return vectorCache.products;
-
-  const extractor = await getExtractor();
-  const indexedProducts = await Promise.all(
-    products.map(async (product) => ({
-      ...product,
-      vector: await embedText(extractor, productSearchText(product)),
-    })),
-  );
-
-  vectorCache = {
-    key: cacheKey,
-    products: indexedProducts,
-  };
-
-  return indexedProducts;
+  try {
+    // We recreate or connect to the Chroma collection
+    // Note: In a production app, we'd check if the collection is already populated.
+    // For this demo, we use a ephemeral-like or local connection.
+    vectorStore = await Chroma.fromDocuments(documents, embeddings, {
+      collectionName: "simba_products",
+      url: process.env.CHROMA_URL || "http://localhost:8000",
+    });
+    lastIndexedKey = cacheKey;
+    return vectorStore;
+  } catch (error) {
+    console.error("Failed to initialize Chroma vector store:", error.message);
+    throw error;
+  }
 }
 
 export async function searchProducts(query, products, options = {}) {
@@ -114,31 +124,26 @@ export async function searchProducts(query, products, options = {}) {
   }
 
   try {
-    const extractor = await getExtractor();
-    const queryVector = await embedText(extractor, trimmedQuery);
-    const indexedProducts = await buildVectorIndex(products);
+    const store = await getVectorStore(products);
+    const results = await store.similaritySearch(trimmedQuery, limit);
 
-    const results = indexedProducts
-      .map((product) => {
-        const semanticScore = cosineSimilarity(queryVector, product.vector);
-        const keywordBoost = lexicalScore(trimmedQuery, product) / 100;
-        const { vector, ...publicProduct } = product;
-
-        return {
-          ...publicProduct,
-          searchScore: semanticScore + keywordBoost,
-          searchSource: "ai",
-        };
-      })
-      .sort((a, b) => b.searchScore - a.searchScore || a.name.localeCompare(b.name))
-      .slice(0, limit);
+    const productsWithScores = results.map((doc) => {
+      const product = doc.metadata;
+      const keywordBoost = lexicalScore(trimmedQuery, product) / 100;
+      
+      return {
+        ...product,
+        searchScore: 1 + keywordBoost, // similaritySearch doesn't always return a score in this LangChain version/config
+        searchSource: "langchain-chroma",
+      };
+    });
 
     return {
       source: "ai",
-      products: results,
+      products: productsWithScores,
     };
   } catch (error) {
-    console.error("AI search unavailable, using local search:", error.message);
+    console.error("LangChain search failed, using fallback:", error.message);
     return {
       source: "local",
       products: fallbackSearch(trimmedQuery, products, limit),

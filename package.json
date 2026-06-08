@@ -14,9 +14,12 @@
     "enrich:images": "node scripts/enrich-unsplash-images.mjs"
   },
   "dependencies": {
+    "@langchain/community": "^1.1.29",
     "@xenova/transformers": "^2.0.1",
     "better-sqlite3": "^12.9.0",
+    "chromadb": "^3.4.3",
     "express": "^5.2.1",
+    "langchain": "^1.4.4",
     "leaflet": "^1.9.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

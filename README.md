@@ -65,6 +65,23 @@ This writes `simba_products.with_unsplash.json` with:
 
 Note: the script uses inferred search queries from product names and categories, so many matches will be approximate lifestyle/product photos, not exact SKU packshots.
 
+## NLP Search with LangChain and ChromaDB
+
+The application uses LangChain and ChromaDB for semantic product search.
+
+### Setup
+
+1. **Start ChromaDB Server**:
+   Ensure you have Docker installed and run:
+   ```bash
+   docker run -d -p 8000:8000 chromadb/chroma
+   ```
+2. **Configuration**:
+   - The server connects to `http://localhost:8000` by default.
+   - You can override this using the `CHROMA_URL` environment variable.
+
+If the ChromaDB server is unreachable, the application will automatically fall back to a lexical (keyword-based) search.
+
 ## Aya Recommendations
 
 Add a Hugging Face token with Inference Providers access:
