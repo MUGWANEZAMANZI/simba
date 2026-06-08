@@ -3,6 +3,7 @@ import Database from "better-sqlite3";
 import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
+import { searchProducts } from "./search.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -346,6 +347,37 @@ app.get("/api/products", (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to read products file." });
+  }
+});
+
+app.get("/api/search", async (req, res) => {
+  const { q, branchId, limit = 24 } = req.query;
+  const query = String(q || "").trim();
+
+  if (!query) {
+    return res.json({ source: "empty", products: [] });
+  }
+
+  try {
+    const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
+    let products = data.products;
+
+    if (branchId) {
+      const inventory = db.prepare("SELECT product_id, quantity FROM inventory WHERE branch_id = ?").all(branchId);
+      const inventoryMap = Object.fromEntries(inventory.map(i => [i.product_id, i.quantity]));
+
+      products = products.map(p => ({
+        ...p,
+        quantity: inventoryMap[p.id] || 0,
+        inStock: (inventoryMap[p.id] || 0) > 0
+      }));
+    }
+
+    const results = await searchProducts(query, products, { limit });
+    return res.json(results);
+  } catch (err) {
+    console.error("Search failed:", err);
+    return res.status(500).json({ error: "Failed to search products." });
   }
 });
 

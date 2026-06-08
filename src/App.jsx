@@ -987,6 +987,8 @@ function App() {
   const [cart, setCart] = usePersistentState(STORAGE_KEYS.cart, {});
   const [category, setCategory] = useState(initialQuery.category);
   const [search, setSearch] = useState("");
+  const [aiSearchIds, setAiSearchIds] = useState([]);
+  const [aiSearchLoading, setAiSearchLoading] = useState(false);
   const [stockOnly, setStockOnly] = useState(false);
   const [sortBy, setSortBy] = useState("name");
   const [selectedProductId, setSelectedProductId] = useState(initialQuery.productId);
@@ -1080,6 +1082,45 @@ function App() {
     }));
   }, [products]);
 
+  useEffect(() => {
+    const query = search.trim();
+
+    if (!selectedBranch || query.length < 3) {
+      setAiSearchIds([]);
+      setAiSearchLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => {
+      setAiSearchLoading(true);
+      const params = new URLSearchParams({
+        q: query,
+        branchId: String(selectedBranch.id),
+        limit: "100",
+      });
+
+      fetch(`/api/search?${params.toString()}`, { signal: controller.signal })
+        .then((res) => (res.ok ? res.json() : Promise.reject(new Error("Search failed"))))
+        .then((data) => {
+          setAiSearchIds((data.products || []).map((product) => product.id));
+          setAiSearchLoading(false);
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            console.error("AI search failed:", err);
+            setAiSearchIds([]);
+            setAiSearchLoading(false);
+          }
+        });
+    }, 350);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [search, selectedBranch]);
+
   const t = languages[language];
   const categoryLabelMap = t.categoryLabels || {};
   const translateCategory = (name) => (name === "All" ? t.allCategories : categoryLabelMap[name] || name);
@@ -1129,6 +1170,13 @@ function App() {
 
   const filteredProducts = useMemo(() => {
     const value = search.trim().toLowerCase();
+    const aiRankMap = new Map(aiSearchIds.map((id, index) => [id, index]));
+    const hasAiSearchResults = value.length >= 3 && aiSearchIds.length > 0;
+    const productsToSearch = hasAiSearchResults
+      ? aiSearchIds
+        .map((id) => normalizeProducts.find((product) => product.id === id))
+        .filter(Boolean)
+      : normalizeProducts;
 
     // Create a regex from the search words (min length 3)
     // Speech transcripts often have filler words, so we split and match any significant word
@@ -1136,10 +1184,11 @@ function App() {
     const pattern = words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|");
     const searchRegex = words.length > 0 ? new RegExp(pattern, "i") : null;
 
-    const results = normalizeProducts
+    const results = productsToSearch
       .filter((product) => (category === "All" ? true : product.category === category))
       .filter((product) => (stockOnly ? product.inStock : true))
       .filter((product) => {
+        if (hasAiSearchResults) return true;
         if (!value) return true;
         const haystack = [product.name, product.category, product.unit]
           .join(" ")
@@ -1151,6 +1200,10 @@ function App() {
         return haystack.includes(value);
       })
       .sort((a, b) => {
+        if (hasAiSearchResults && sortBy === "name") {
+          return aiRankMap.get(a.id) - aiRankMap.get(b.id);
+        }
+
         // If searching, prioritize by number of word matches (relevance)
         if (value && words.length > 0) {
           const getScore = (product) => {
@@ -1178,7 +1231,7 @@ function App() {
       });
 
     return results;
-  }, [category, normalizeProducts, search, sortBy, stockOnly]);
+  }, [aiSearchIds, category, normalizeProducts, search, sortBy, stockOnly]);
 
   useEffect(() => {
     if (currentPage > 1 && filteredProducts.length === 0) {
@@ -1606,7 +1659,23 @@ function App() {
         </div>
         <div className="topbar-actions">
           {selectedBranch && (
-            <button className="ghost-button" onClick={() => setSelectedBranch(null)}>{t.changeBranch}</button>
+            <div className="language-switcher">
+              <span className="language-switcher-label">{t.branchLabel}</span>
+              <select
+                className="ghost-button"
+                value={selectedBranch.id}
+                onChange={(e) => {
+                  const branch = branches.find(b => b.id === Number(e.target.value));
+                  if (branch) selectBranch(branch);
+                }}
+              >
+                {branches.map(branch => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
           <button className="ghost-button" onClick={() => window.location.hash = 'admin'}>{t.adminNav}</button>
           <button className="ghost-button" onClick={openDemoMarketDashboard}>{t.marketNav}</button>
@@ -1616,33 +1685,16 @@ function App() {
           )}
           <div className="language-switcher" aria-label={t.switchLanguage}>
             <span className="language-switcher-label">{t.switchLanguage}</span>
-            <div className="language-switcher-buttons" role="group" aria-label={t.switchLanguage}>
-              <button
-                type="button"
-                className={language === "en" ? "language-chip active" : "language-chip"}
-                onClick={() => setLanguage("en")}
-                aria-pressed={language === "en"}
-              >
-                English
-              </button>
-              <button
-                type="button"
-                className={language === "fr" ? "language-chip active" : "language-chip"}
-                onClick={() => setLanguage("fr")}
-                aria-pressed={language === "fr"}
-              >
-                Français
-              </button>
-              <button
-                type="button"
-                className={language === "rw" ? "language-chip active" : "language-chip"}
-                onClick={() => setLanguage("rw")}
-                aria-pressed={language === "rw"}
-              >
-                Kinyarwanda
-              </button>
-            </div>
-            <small className="language-switcher-hint">{t.languageHint}</small>
+            <select
+              className="ghost-button"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              aria-label={t.switchLanguage}
+            >
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+              <option value="rw">Kinyarwanda</option>
+            </select>
           </div>
           <button
             className="ghost-button"
@@ -1823,16 +1875,17 @@ function App() {
                   <div className="language-proof branch-language-proof" data-testid="landing-language-support">
                     <span className="demo-access-title">{t.languagePanelTitle}</span>
                     <p>{t.languagePanelText}</p>
-                    <div className="language-proof-actions" role="group" aria-label={t.switchLanguage}>
-                      <button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>
-                        English
-                      </button>
-                      <button className={language === "fr" ? "active" : ""} onClick={() => setLanguage("fr")}>
-                        Francais
-                      </button>
-                      <button className={language === "rw" ? "active" : ""} onClick={() => setLanguage("rw")}>
-                        Kinyarwanda
-                      </button>
+                    <div className="language-proof-actions">
+                      <select
+                        className="ghost-button"
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        aria-label={t.switchLanguage}
+                      >
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="rw">Kinyarwanda</option>
+                      </select>
                     </div>
                   </div>
                   <div className="branch-grid">
@@ -1882,6 +1935,7 @@ function App() {
                       <div className="hero-search">
                         <input
                           value={search}
+                          aria-busy={aiSearchLoading}
                           onChange={(event) => {
                             setSearch(event.target.value);
                             setCurrentPage(1);
@@ -1911,17 +1965,18 @@ function App() {
                         <div className="language-proof" data-testid="multi-language-support">
                           <span className="demo-access-title">{t.languagePanelTitle}</span>
                           <p>{t.languagePanelText}</p>
-                          <div className="language-proof-actions" role="group" aria-label={t.switchLanguage}>
-                            <button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>
-                              English
-                            </button>
-                            <button className={language === "fr" ? "active" : ""} onClick={() => setLanguage("fr")}>
-                              Francais
-                            </button>
-                            <button className={language === "rw" ? "active" : ""} onClick={() => setLanguage("rw")}>
-                              Kinyarwanda
-                            </button>
-                          </div>
+                    <div className="language-proof-actions">
+                      <select
+                        className="ghost-button"
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        aria-label={t.switchLanguage}
+                      >
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="rw">Kinyarwanda</option>
+                      </select>
+                    </div>
                         </div>
                       </div>
                     </div>

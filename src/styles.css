@@ -893,7 +893,7 @@ select {
   width: 100%;
   max-width: none;
   padding: 0.55rem max(1rem, calc((100vw - 1240px) / 2));
-  background: #131921;
+  background: #FC7D00;
   color: #ffffff;
   align-items: center;
 }
@@ -912,13 +912,13 @@ select {
 
 .topbar .ghost-button,
 .topbar .language-chip {
-  background: transparent;
+  background: #cbcbcb;
   border-color: rgba(255, 255, 255, 0.24);
   color: #ffffff;
 }
 
 .topbar .language-chip.active {
-  background: #ffffff;
+  background: #cd2b2b;
   color: #131921;
 }
 
