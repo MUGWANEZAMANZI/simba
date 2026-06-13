@@ -298,6 +298,27 @@ try {
   console.error("Failed to seed demo orders:", err);
 }
 
+// Seed test buyer account so login works on fresh DB
+try {
+  const existing = db.prepare("SELECT id FROM accounts WHERE phone = ?").get(TEST_BUYERS[0].phone);
+  if (!existing) {
+    const ts = new Date().toISOString();
+    upsertAccount.run({
+      full_name: TEST_BUYERS[0].full_name,
+      phone: TEST_BUYERS[0].phone,
+      address: TEST_BUYERS[0].address,
+      district: TEST_BUYERS[0].district,
+      latitude: null,
+      longitude: null,
+      created_at: ts,
+      last_order_at: ts,
+    });
+    console.log("Seeded test buyer account.");
+  }
+} catch (err) {
+  console.error("Failed to seed test buyer:", err);
+}
+
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 
