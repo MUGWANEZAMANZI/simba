@@ -507,45 +507,9 @@ select option {
   font-size: 0.85rem;
 }
 
-/* Mobile category chip bar */
+/* Mobile category chip bar — hidden on all screen sizes (categories in hamburger) */
 .mobile-category-bar {
   display: none;
-}
-
-@media (max-width: 768px) {
-  .mobile-category-bar {
-    display: flex;
-    gap: 0.5rem;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    padding: 0 0 0.75rem;
-    margin-bottom: 0.5rem;
-    margin-top: -1rem;
-  }
-
-  .mobile-category-bar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .mobile-category-chip {
-    flex-shrink: 0;
-    padding: 0.5rem 0.9rem;
-    border-radius: 999px;
-    background: var(--surface-strong);
-    border: 1px solid var(--line);
-    color: var(--text);
-    font-weight: 600;
-    font-size: 0.85rem;
-    white-space: nowrap;
-    transition: all 0.2s ease;
-  }
-
-  .mobile-category-chip.active {
-    background: var(--accent);
-    color: #111827;
-    border-color: var(--accent-strong);
-  }
 }
 
 /* Proof Grid */
