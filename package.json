@@ -15,12 +15,16 @@
   },
   "dependencies": {
     "@langchain/community": "^1.1.29",
+    "@langchain/core": "^1.1.48",
     "@xenova/transformers": "^2.0.1",
+    "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
     "chromadb": "^3.4.3",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "langchain": "^1.4.4",
     "leaflet": "^1.9.4",
+    "nodemailer": "^8.0.11",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1"

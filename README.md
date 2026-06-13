@@ -65,22 +65,50 @@ This writes `simba_products.with_unsplash.json` with:
 
 Note: the script uses inferred search queries from product names and categories, so many matches will be approximate lifestyle/product photos, not exact SKU packshots.
 
-## NLP Search with LangChain and ChromaDB
+## NLP Search with Qwen + Local Embeddings
 
-The application uses LangChain and ChromaDB for semantic product search.
+The `/api/search` endpoint is a semantic search pipeline that interprets a
+buyer's natural-language query (e.g. "I'm hosting a party and need drinks
+and snacks" or "I feel tired and need a quick study boost") and returns the
+products that best match their intent.
 
-### Setup
+### Pipeline
 
-1. **Start ChromaDB Server**:
-   Ensure you have Docker installed and run:
-   ```bash
-   docker run -d -p 8000:8000 chromadb/chroma
-   ```
-2. **Configuration**:
-   - The server connects to `http://localhost:8000` by default.
-   - You can override this using the `CHROMA_URL` environment variable.
+1. **Lexical shortlist** — fast keyword filter on product name, category,
+   brand, tags, and location. Bounds the work for the next step.
+2. **Vector ranking** — the buyer's query is embedded with
+   `Xenova/all-MiniLM-L6-v2` running in-process via `@xenova/transformers`.
+   Product embeddings are pre-computed at server boot (and cached to
+   `server/.cache/product-index.json`). Cosine similarity ranks the
+   shortlisted candidates.
+3. **Qwen rerank** — if `HF_TOKEN` is set, the top candidates are sent to a
+   Qwen chat model on Hugging Face
+   (`QWEN_MODEL`, default `Qwen/Qwen2.5-72B-Instruct`) with a multilingual
+   system prompt. Qwen returns the final picks with short reasoning, so
+   multi-intent queries work even when individual keywords don't match.
 
-If the ChromaDB server is unreachable, the application will automatically fall back to a lexical (keyword-based) search.
+If the local embedding model cannot load (sandboxed environment, missing
+native deps), the server transparently falls back to the Hugging Face
+feature-extraction endpoint. If the Qwen rerank call fails, the vector
+result is returned. The response includes a `source` field
+(`"qwen" | "vector" | "lexical" | "empty"`) and an `embeddingBackend` field
+(`"local" | "remote"`) so the UI can show what powered the result.
+
+### Configuration
+
+- `HF_TOKEN` / `VITE_HF_TOKEN` — Hugging Face token. Required only for the
+  Qwen rerank step and the Aya recommendation flow; the rest of the search
+  works without it.
+- `QWEN_MODEL` / `VITE_QWEN_MODEL` — Qwen checkpoint to use for reranking.
+  Any chat model on the HF router works (e.g. `Qwen/Qwen2.5-7B-Instruct`).
+
+### Trying it out
+
+```bash
+curl 'http://localhost:8787/api/search?q=hosting%20a%20party%20need%20drinks%20and%20snacks&limit=6'
+curl 'http://localhost:8787/api/search?q=feel%20tired%20need%20study%20boost&limit=6'
+curl 'http://localhost:8787/api/search?q=cleaning%20supplies%20for%20the%20kitchen&limit=6'
+```
 
 ## Aya Recommendations
 

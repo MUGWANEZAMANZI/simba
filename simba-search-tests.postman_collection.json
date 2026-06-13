@@ -1,0 +1,114 @@
+{
+  "info": {
+    "name": "Simba Search NLP Tests",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Tests for natural language price/stock parsing in Simba search API"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/health"
+      }
+    },
+    {
+      "name": "1. cleaning (all, no branchId)",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=cleaning&limit=3"
+      }
+    },
+    {
+      "name": "2. cleaning (with branchId – auto filters out-of-stock)",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=cleaning&branchId=1&limit=5"
+      }
+    },
+    {
+      "name": "3. cleaning less than 10000 (branchId)",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=cleaning%20less%20than%2010000&branchId=1&limit=5"
+      }
+    },
+    {
+      "name": "4. cleaning less than 10000 (no branchId)",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=cleaning%20less%20than%2010000&limit=5"
+      }
+    },
+    {
+      "name": "5. under 5000 (no category)",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=under%205000&branchId=1&limit=5"
+      }
+    },
+    {
+      "name": "6. snacks under 2000",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=snacks%20under%202000&branchId=1&limit=5"
+      }
+    },
+    {
+      "name": "7. drinks in stock",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=drinks%20in%20stock&branchId=1&limit=5"
+      }
+    },
+    {
+      "name": "8. more than 50000",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=more%20than%2050000&branchId=1&limit=5"
+      }
+    },
+    {
+      "name": "9. cleaning my house less than 10000 in stock",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=cleaning%20my%20house%20less%20than%2010000%20in%20stock&branchId=1&limit=10"
+      }
+    },
+    {
+      "name": "10. budget 3000 rice",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=budget%203000%20rice&branchId=1&limit=5"
+      }
+    },
+    {
+      "name": "11. hosting a party drinks and snacks",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=hosting%20a%20party%20drinks%20and%20snacks&branchId=1&limit=5"
+      }
+    },
+    {
+      "name": "12. products API with inStock filter",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/products?branchId=1&inStock=true&limit=5"
+      }
+    },
+    {
+      "name": "13. products API all (no stock filter)",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/products?branchId=1&limit=3"
+      }
+    },
+    {
+      "name": "14. at most 2000 water",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8787/api/search?q=at%20most%202000%20water&branchId=1&limit=5"
+      }
+    }
+  ]
+}

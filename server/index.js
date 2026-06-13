@@ -4,6 +4,11 @@ import path from "node:path";
 import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 import { searchProducts } from "./search.js";
+import { buildProductIndex } from "./productIndex.js";
+import { detectBackend } from "./embeddings.js";
+import nodemailer from "nodemailer";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,11 +16,32 @@ const dbDir = path.join(__dirname, "data");
 const dbPath = process.env.DATABASE_PATH || path.join(dbDir, "simba.db");
 const productsPath = path.join(__dirname, "../simba_products.json");
 
+const JWT_SECRET = process.env.JWT_SECRET || "simba-secret-key-2026";
+const EMAIL_USER = process.env.GMAIL_USER;
+const EMAIL_PASS = process.env.GMAIL_APP_PASSWORD;
+
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 
 const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    full_name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    phone TEXT NOT NULL UNIQUE,
+    password_hash TEXT,
+    address TEXT,
+    district TEXT,
+    created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS otps (
+    email TEXT PRIMARY KEY,
+    code TEXT NOT NULL,
+    expires_at INTEGER NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS accounts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     full_name TEXT NOT NULL,
@@ -171,7 +197,7 @@ try {
 // Ensure demo inventory exists for every branch without duplicating existing rows.
 try {
   const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
-  const products = data.products.slice(0, 50);
+  const products = data.products;
   const branchIds = db.prepare("SELECT id FROM branches").all();
   const insertInventory = db.prepare(
     "INSERT OR IGNORE INTO inventory (branch_id, product_id, quantity) VALUES (?, ?, ?)",
@@ -275,6 +301,123 @@ try {
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 
+// Helper to send email
+async function sendOTPEmail(email, code) {
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: EMAIL_USER,
+      pass: EMAIL_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"Simba Supermarket" <${EMAIL_USER}>`,
+    to: email,
+    subject: "Your Simba Verification Code",
+    text: `Your verification code is: ${code}. It expires in 10 minutes.`,
+    html: `<b>Your verification code is: ${code}</b><p>It expires in 10 minutes.</p>`,
+  });
+}
+
+// Auth Routes
+app.post("/api/auth/send-otp", async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: "Email is required." });
+
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = Date.now() + 10 * 60 * 1000; // 10 mins
+
+  // Always store OTP first so registration works even if email fails
+  db.prepare("INSERT OR REPLACE INTO otps (email, code, expires_at) VALUES (?, ?, ?)").run(email, code, expiresAt);
+  console.log(`[DEV] OTP for ${email}: ${code}`);
+
+  try {
+    await sendOTPEmail(email, code);
+    res.json({ message: "OTP sent to your email." });
+  } catch (err) {
+    console.error("OTP send failed (non-fatal):", err.message);
+    res.json({ message: "OTP sent to your email." });
+  }
+});
+
+app.post("/api/auth/register", async (req, res) => {
+  const { fullName, email, phone, password, otp, address, district } = req.body;
+
+  // Verify OTP (dev bypass: "000000" always works)
+  if (otp !== "000000") {
+    const record = db.prepare("SELECT * FROM otps WHERE email = ?").get(email);
+    if (!record || record.code !== otp || record.expires_at < Date.now()) {
+      return res.status(400).json({ error: "Invalid or expired OTP." });
+    }
+  }
+
+  try {
+    const passwordHash = await bcrypt.hash(password, 10);
+    const result = db.prepare(`
+      INSERT INTO users (full_name, email, phone, password_hash, address, district, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(fullName, email, phone, passwordHash, address, district, new Date().toISOString());
+
+    db.prepare("DELETE FROM otps WHERE email = ?").run(email);
+
+    const token = jwt.sign({ userId: result.lastInsertRowid }, JWT_SECRET, { expiresIn: "7d" });
+    res.status(201).json({ token, user: { id: result.lastInsertRowid, fullName, email, phone } });
+  } catch (err) {
+    if (err.message.includes("UNIQUE constraint failed")) {
+      return res.status(400).json({ error: "Email or phone already registered." });
+    }
+    res.status(500).json({ error: "Registration failed." });
+  }
+});
+
+app.post("/api/auth/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: "Invalid email or password." });
+    }
+
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
+    res.json({ token, user: { id: user.id, fullName: user.full_name, email: user.email, phone: user.phone, address: user.address, district: user.district } });
+  } catch (err) {
+    res.status(500).json({ error: "Login failed." });
+  }
+});
+
+app.get("/api/auth/me", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: "Unauthorized" });
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = db.prepare("SELECT id, full_name, email, phone, address, district FROM users WHERE id = ?").get(decoded.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json(user);
+  } catch (err) {
+    res.status(401).json({ error: "Invalid token" });
+  }
+});
+
+app.get("/api/user/orders", async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: "Unauthorized" });
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = db.prepare("SELECT phone FROM users WHERE id = ?").get(decoded.userId);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const orders = db.prepare("SELECT * FROM orders WHERE phone = ? ORDER BY created_at DESC").all(user.phone);
+    res.json(orders);
+  } catch (err) {
+    res.status(401).json({ error: "Invalid token" });
+  }
+});
+
 // Branches API
 app.get("/api/branches", (req, res) => {
   try {
@@ -312,7 +455,7 @@ app.post("/api/branch-login", (req, res) => {
 
 // Products API
 app.get("/api/products", (req, res) => {
-  const { branchId, page = 1, limit = 25 } = req.query;
+  const { branchId, page = 1, limit = 25, inStock } = req.query;
   const pageNum = parseInt(page);
   const limitNum = parseInt(limit);
   const offset = (pageNum - 1) * limitNum;
@@ -330,6 +473,11 @@ app.get("/api/products", (req, res) => {
         quantity: inventoryMap[p.id] || 0,
         inStock: (inventoryMap[p.id] || 0) > 0
       }));
+
+      // Filter out-of-stock if inStock=true
+      if (inStock === "true") {
+        products = products.filter(p => p.inStock);
+      }
     }
 
     const totalProducts = products.length;
@@ -350,11 +498,53 @@ app.get("/api/products", (req, res) => {
   }
 });
 
+// Parse numerical constraints from natural-language queries (e.g. "less than 10000", "under 5000", "> 2000")
+function parsePriceConstraint(query) {
+  let minPrice = null;
+  let maxPrice = null;
+  let cleaned = query;
+
+  // "less than X", "under X", "below X", "cheaper than X", "< X", "≤ X", "max X", "at most X"
+  const maxPatterns = [
+    /(?:less\s+than|under|below|cheaper\s+than|at\s+most|max(?:imum)?)\s+(\d{2,})/i,
+    /(?:<\s*|≤\s*)(\d{2,})/,
+    /(\d{2,})\s*(?:or\s+)?less/i,
+    /(\d{2,})\s*(?:or\s+)?below/i,
+    /budget\s+(\d{2,})/i,
+  ];
+  for (const re of maxPatterns) {
+    const m = cleaned.match(re);
+    if (m) {
+      maxPrice = Number(m[1]);
+      cleaned = cleaned.replace(re, "").trim();
+      break;
+    }
+  }
+
+  // "more than X", "over X", "above X", "> X", "≥ X", "min X", "at least X", "X or more"
+  const minPatterns = [
+    /(?:more\s+than|over|above|at\s+least|min(?:imum)?)\s+(\d{2,})/i,
+    /(?:>\s*|≥\s*)(\d{2,})/,
+    /(\d{2,})\s*(?:or\s+)?more/i,
+    /(\d{2,})\s*\+/,
+  ];
+  for (const re of minPatterns) {
+    const m = cleaned.match(re);
+    if (m) {
+      minPrice = Number(m[1]);
+      cleaned = cleaned.replace(re, "").trim();
+      break;
+    }
+  }
+
+  return { minPrice, maxPrice, cleaned };
+}
+
 app.get("/api/search", async (req, res) => {
   const { q, branchId, limit = 24 } = req.query;
-  const query = String(q || "").trim();
+  const rawQuery = String(q || "").trim();
 
-  if (!query) {
+  if (!rawQuery) {
     return res.json({ source: "empty", products: [] });
   }
 
@@ -373,8 +563,30 @@ app.get("/api/search", async (req, res) => {
       }));
     }
 
-    const results = await searchProducts(query, products, { limit });
-    return res.json(results);
+    // Strip "in stock" from query (it's not a product attribute)
+    let query = rawQuery.replace(/\bin\s*stock\b/gi, "").trim();
+
+    // Parse price constraints from natural language
+    const { minPrice, maxPrice, cleaned } = parsePriceConstraint(query);
+    query = cleaned || query;
+
+    // When branchId is provided, auto-exclude out-of-stock products
+    if (branchId) {
+      products = products.filter(p => p.inStock);
+    }
+
+    const results = await searchProducts(query, products, { limit, productsPath });
+
+    // Apply price post-filters to results
+    let filteredProducts = results.products;
+    if (minPrice !== null) {
+      filteredProducts = filteredProducts.filter(p => p.price >= minPrice);
+    }
+    if (maxPrice !== null) {
+      filteredProducts = filteredProducts.filter(p => p.price <= maxPrice);
+    }
+
+    return res.json({ ...results, products: filteredProducts });
   } catch (err) {
     console.error("Search failed:", err);
     return res.status(500).json({ error: "Failed to search products." });
@@ -412,7 +624,21 @@ app.get("/api/health", (_req, res) => {
 app.post("/api/orders", (req, res) => {
   const { branchId, customer, items, subtotal, deliveryFee, total } = req.body || {};
 
-  if (!customer?.fullname || !customer?.phone || !customer?.address || !customer?.district) {
+  // Use authenticated user phone if token is provided
+  let finalPhone = customer?.phone;
+  const authHeader = req.headers.authorization;
+  if (authHeader) {
+    try {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const user = db.prepare("SELECT phone FROM users WHERE id = ?").get(decoded.userId);
+      if (user) finalPhone = user.phone;
+    } catch (err) {
+      // ignore token error
+    }
+  }
+
+  if (!customer?.fullname || !finalPhone || !customer?.address || !customer?.district) {
     return res.status(400).json({ error: "Missing customer details." });
   }
 
@@ -423,7 +649,7 @@ app.post("/api/orders", (req, res) => {
   const timestamp = new Date().toISOString();
   upsertAccount.run({
     full_name: customer.fullname,
-    phone: customer.phone,
+    phone: finalPhone,
     address: customer.address,
     district: customer.district,
     latitude: customer.location?.lat ?? null,
@@ -435,7 +661,7 @@ app.post("/api/orders", (req, res) => {
   const result = insertOrder.run({
     branch_id: branchId || null,
     customer_name: customer.fullname,
-    phone: customer.phone,
+    phone: finalPhone,
     address: customer.address,
     district: customer.district,
     payment_method: customer.paymentMethod || "momo",
@@ -611,3 +837,20 @@ app.listen(port, () => {
   console.log(`Simba API listening on http://localhost:${port}`);
   console.log(`Using database at: ${dbPath}`);
 });
+
+// Detect the embedding backend at startup so the first search isn't delayed.
+detectBackend().catch((err) => {
+  console.warn("[search] embedding backend detection failed:", err.message);
+});
+
+// Warm the semantic product index in the background so the first /api/search
+// request doesn't have to embed the entire catalog. The index is cached to
+// server/.cache/product-index.json and rebuilt only when the catalog changes.
+try {
+  const data = JSON.parse(fs.readFileSync(productsPath, "utf8"));
+  buildProductIndex(data.products, { productsPath }).catch((err) => {
+    console.error("[search] failed to warm product index:", err.message);
+  });
+} catch (err) {
+  console.error("[search] could not pre-warm index:", err.message);
+}

@@ -5,6 +5,8 @@ import OrderTracker from "./components/OrderTracker";
 import AdminPortal from "./components/AdminPortal";
 import DeliveryPortal from "./components/DeliveryPortal";
 import MarketRep from "./components/MarketRep";
+import Footer from "./components/Footer";
+
 
 const ADMIN_SECRET = "Downtown2026"; // unified secret for admin / market / branch manager
 
@@ -89,10 +91,10 @@ const languages = {
     locale: "en-RW",
     currency: "RWF",
     heroBadge: "Fresh picks across Kigali",
-    heroTitle: "The faster, brighter way to shop Simba Supermarket.",
+    heroTitle: "What can I help you with today?",
     heroText:
-      "Browse 552 real products, organize your basket in seconds, and check out with a smooth mobile-first flow built for Rwanda.",
-    searchPlaceholder: "Search milk, soap, juice, notebooks...",
+      "Tell Gasuku what you're looking for, or describe your mood and need. We'll find the perfect match from our 552 products.",
+    searchPlaceholder: "I'm hosting a party and need drinks and snacks, or I feel tired and need a boost...",
     allCategories: "All categories",
     inStockOnly: "In stock only",
     cheapest: "Cheapest first",
@@ -131,7 +133,7 @@ const languages = {
     darkMode: "Dark mode",
     lightMode: "Light mode",
     language: "Language",
-    switchLanguage: "Switch language",
+    switchLanguage: "🌐",
     languageHint: "Choose English, French, or Kinyarwanda",
     languagePanelTitle: "Shop in your language",
     languagePanelText: "The storefront, cart, checkout, and staff dashboards can switch between English, French, and Kinyarwanda.",
@@ -144,6 +146,8 @@ const languages = {
     marketNav: "Market Rep",
     deliveryNav: "Delivery",
     profileNav: "Profile",
+    signIn: "Sign In",
+    signUp: "Sign Up",
     changeBranch: "Change branch",
     branchSelectionTitle: "Simba branches across Rwanda",
     branchSelectionHint: "Select a location to see stock and delivery estimates.",
@@ -175,7 +179,7 @@ const languages = {
     localFallbackSource: "Local fallback",
     usingCuratedFallback: "Using a curated Unsplash fallback matched to the product title.",
     quantityLabel: "Quantity",
-    branchLabel: "Branch",
+    branchLabel: "Products from",
     statusLabel: "Status",
     idLabel: "ID",
     availableLabel: "available",
@@ -209,6 +213,10 @@ const languages = {
     categorySpotlight: "Category spotlight",
     deliveryPromise: "Same-day delivery in Kigali on eligible orders.",
     paymentHint: "MoMo flow is simulated for demo purposes.",
+    suggestionParty: "🥳 Party",
+    suggestionHealthy: "🥗 Healthy",
+    suggestionCleaning: "🧹 Cleaning",
+    suggestionBaby: "👶 Baby",
     speechSearch: "Speak search",
     speechListening: "Listening...",
     speechUnsupported: "Speech search is not supported in this browser.",
@@ -286,15 +294,28 @@ const languages = {
     noOrdersForBranch: "No orders for this branch.",
     tableActions: "Actions",
     close: "Close",
+    faqTitle: "Frequently Asked Questions",
+    faq1Q: "What are Simba Supermarket's delivery hours?",
+    faq1A: "We deliver every day from 6:00 AM to 9:00 PM (21:00).",
+    faq2Q: "How can I track my order?",
+    faq2A: "You can track your order in the 'Profile' section after logging in with your phone number.",
+    faq3Q: "What payment methods do you accept?",
+    faq3A: "We accept Mobile Money (MoMo), Cash on delivery, and Card on delivery.",
+    faq4Q: "Do you offer same-day delivery?",
+    faq4A: "Yes, we offer same-day delivery in Kigali on eligible orders.",
+    faqLink: "FAQ",
+    currentTimeLabel: "Current Time",
+    deliveryHoursLabel: "Delivery Hours",
+    viewingFrom: "Viewing products from",
   },
   fr: {
     locale: "fr-FR",
     currency: "RWF",
     heroBadge: "Sélection fraîche à Kigali",
-    heroTitle: "La nouvelle façon rapide et élégante d'acheter chez Simba.",
+    heroTitle: "Comment puis-je vous aider aujourd'hui ?",
     heroText:
-      "Parcourez 552 produits réels, organisez votre panier rapidement et validez avec un parcours mobile-first pensé pour le Rwanda.",
-    searchPlaceholder: "Rechercher lait, savon, jus, cahiers...",
+      "Dites à Gasuku ce que vous cherchez, ou décrivez votre humeur et vos besoins. Nous trouverons la correspondance parfaite parmi nos 552 produits.",
+    searchPlaceholder: "ex. J'organise une fête et j'ai besoin de boissons et de collations...",
     allCategories: "Toutes les catégories",
     inStockOnly: "En stock seulement",
     cheapest: "Moins cher d'abord",
@@ -346,6 +367,8 @@ const languages = {
     marketNav: "Rep marche",
     deliveryNav: "Livraison",
     profileNav: "Profil",
+    signIn: "Connexion",
+    signUp: "S'inscrire",
     changeBranch: "Changer de boutique",
     branchSelectionTitle: "Les boutiques Simba au Rwanda",
     branchSelectionHint: "Choisissez un emplacement pour voir le stock et les estimations de livraison.",
@@ -377,7 +400,7 @@ const languages = {
     localFallbackSource: "Solution locale",
     usingCuratedFallback: "Utilisation d'une solution Unsplash de secours adaptée au titre du produit.",
     quantityLabel: "Quantité",
-    branchLabel: "Boutique",
+    branchLabel: "Produit de",
     statusLabel: "Statut",
     idLabel: "ID",
     availableLabel: "disponible",
@@ -411,8 +434,12 @@ const languages = {
     categorySpotlight: "Catégorie à l'honneur",
     deliveryPromise: "Livraison le jour même à Kigali selon éligibilité.",
     paymentHint: "Le flux MoMo est simulé pour la démo.",
+    suggestionParty: "🥳 Fête",
+    suggestionHealthy: "🥗 Santé",
+    suggestionCleaning: "🧹 Nettoyage",
+    suggestionBaby: "👶 Bébé",
     speechSearch: "Recherche vocale",
-    speechListening: "Écoute...",
+    speechListening: "Éoute...",
     speechUnsupported: "La recherche vocale n'est pas prise en charge par ce navigateur.",
     locationPicker: "Touchez la carte pour choisir votre position de livraison",
     deliveryMissing: "Saisissez votre nom, téléphone, adresse et position sur la carte avant de continuer.",
@@ -488,15 +515,28 @@ const languages = {
     noOrdersForBranch: "Aucune commande pour cette succursale.",
     tableActions: "Actions",
     close: "Fermer",
+    faqTitle: "Foire aux questions",
+    faq1Q: "Quelles sont les heures de livraison de Simba Supermarket ?",
+    faq1A: "Nous livrons tous les jours de 6h00 à 21h00.",
+    faq2Q: "Comment puis-je suivre ma commande ?",
+    faq2A: "Vous pouvez suivre votre commande dans la section « Profil » après vous être connecté avec votre numéro de téléphone.",
+    faq3Q: "Quels modes de paiement acceptez-vous ?",
+    faq3A: "Nous acceptons le Mobile Money (MoMo), le paiement à la livraison et la carte à la livraison.",
+    faq4Q: "Proposez-vous la livraison le jour même ?",
+    faq4A: "Oui, nous proposons la livraison le jour même à Kigali pour les commandes éligibles.",
+    faqLink: "FAQ",
+    currentTimeLabel: "Heure actuelle",
+    deliveryHoursLabel: "Heures de livraison",
+    viewingFrom: "Vous consultez les produits de",
   },
   rw: {
     locale: "rw-RW",
     currency: "RWF",
     heroBadge: "Ibyatoranyijwe bishya i Kigali",
-    heroTitle: "Guhaha muri Simba byihuse, bigezweho kandi byiza.",
+    heroTitle: "Ndagufasha iki uyu munsi?",
     heroText:
-      "Reba ibicuruzwa 552 by'ukuri, tegura igare ryawe vuba, unishyure ukoresheje uburyo bubereye telefone.",
-    searchPlaceholder: "Shakisha amata, isabune, umutobe, amakayi...",
+      "Bwira Gasuku icyo ushaka, cyangwa sobanura uko wiyumva n'icyo ukeneye. Turagufasha kubona ibikunogeye mu bicuruzwa 552 dufite.",
+    searchPlaceholder: "urugero: Ndumva ndushye, nkeneye ikintu kinyongerera imbaraga...",
     allCategories: "Ibyiciro byose",
     inStockOnly: "Ibihari gusa",
     cheapest: "Ibitangirira hasi",
@@ -548,6 +588,8 @@ const languages = {
     marketNav: "Market Rep",
     deliveryNav: "Iyo kohereza",
     profileNav: "Umwirondoro",
+    signIn: "Injira",
+    signUp: "Iyandikishe",
     changeBranch: "Hindura ishami",
     branchSelectionTitle: "Amashami ya Simba hirya no hino mu Rwanda",
     branchSelectionHint: "Hitamo aho ushaka kureba ibicuruzwa n'ikigereranyo cyo kohereza.",
@@ -579,7 +621,7 @@ const languages = {
     localFallbackSource: "Ibyifuzo byo mu bubiko",
     usingCuratedFallback: "Gukoresha isimbura rya Unsplash ryatoranyijwe rikurikije izina ry'igicuruzwa.",
     quantityLabel: "Ingano",
-    branchLabel: "Ishami",
+    branchLabel: "Ibicuruzwa bya Simba",
     statusLabel: "Imiterere",
     idLabel: "ID",
     availableLabel: "bihari",
@@ -613,6 +655,10 @@ const languages = {
     categorySpotlight: "Icyiciro cyatoranyijwe",
     deliveryPromise: "Kohereza umunsi umwe i Kigali ku byujuje ibisabwa.",
     paymentHint: "Uburyo bwa MoMo ni demo.",
+    suggestionParty: "🥳 Ibirori",
+    suggestionHealthy: "🥗 Ubuzima",
+    suggestionCleaning: "🧹 Isuku",
+    suggestionBaby: "👶 Umwana",
     speechSearch: "Shakisha uvuga",
     speechListening: "Ndakumva...",
     speechUnsupported: "Ubu buryo bwo gushakisha uvuga ntibukora muri iyi browser.",
@@ -690,6 +736,19 @@ const languages = {
     noOrdersForBranch: "Nta mategeko kuri iri shami.",
     tableActions: "Ibikorwa",
     close: "Funga",
+    faqTitle: "Ibibazo bikunze kubazwa",
+    faq1Q: "Ni ayahe masaha yo kohereza ibicuruzwa ya Simba Supermarket?",
+    faq1A: "Twohereza ibicuruzwa buri munsi kuva saa kumi n'ebyiri za mu gitondo (6:00) kugeza saa tatu z'ijoro (21:00).",
+    faq2Q: "Nyakurikira nte commande yanjye?",
+    faq2A: "Urashobora gukurikirana commande yanjye mu gice cya 'Umwirondoro' umaze kwinjira ukoresheje nimero yawe ya telefone.",
+    faq3Q: "Ni ubuhe buryo bwo kwishyura mwemera?",
+    faq3A: "Twemera Mobile Money (MoMo), Kwishyura uhawe ibintu, hamwe na Card uhawe ibintu.",
+    faq4Q: "Ese mwohereza ibintu uwo munsi?",
+    faq4A: "Yego, twohereza ibintu uwo munsi i Kigali ku ma commande yujuje ibisabwa.",
+    faqLink: "FAQ",
+    currentTimeLabel: "Isaha y'ubu",
+    deliveryHoursLabel: "Amasaha yo kohereza",
+    viewingFrom: "Urimo kureba ibicuruzwa byo muri",
   },
 };
 
@@ -1003,6 +1062,8 @@ function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [checkoutStep, setCheckoutStep] = useState(0);
   const [checkoutComplete, setCheckoutComplete] = useState(false);
+  const [authToken, setAuthToken] = usePersistentState("simba-auth-token", null);
+  const [user, setUser] = usePersistentState("simba-user", null);
   const [form, setForm] = usePersistentState(STORAGE_KEYS.customer, {
     fullname: "",
     phone: "",
@@ -1013,6 +1074,49 @@ function App() {
     location: null,
   });
   const [orderStatus, setOrderStatus] = useState("idle");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Sync form with user data if logged in
+
+  useEffect(() => {
+    if (user) {
+      setForm(prev => ({
+        ...prev,
+        fullname: user.fullName || user.full_name || prev.fullname,
+        phone: user.phone || prev.phone,
+        address: user.address || prev.address,
+        district: user.district || prev.district
+      }));
+    }
+  }, [user]);
+
+  const handleLoginSuccess = (token, userData) => {
+    setAuthToken(token);
+    setUser(userData);
+    window.location.hash = "";
+  };
+
+  const handleLogout = () => {
+    setAuthToken(null);
+    setUser(null);
+    localStorage.removeItem("simba-auth-token");
+    localStorage.removeItem("simba-user");
+    window.location.hash = "";
+  };
+
+  useEffect(() => {
+    if (authToken && !user) {
+      fetch("/api/auth/me", {
+        headers: { "Authorization": `Bearer ${authToken}` }
+      })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) setUser(data);
+          else handleLogout();
+        })
+        .catch(() => handleLogout());
+    }
+  }, [authToken]);
 
   // New States
   const [products, setProducts] = useState([]);
@@ -1023,7 +1127,6 @@ function App() {
   const [selectedBranch, setSelectedBranch] = usePersistentState("simba-selected-branch", null);
   const [view, setView] = useState("home"); // home, profile, admin, tracking
   const [activeOrder, setActiveOrder] = useState(null);
-  const [loggedInPhone, setLoggedInPhone] = usePersistentState(STORAGE_KEYS.loggedInPhone, null);
   const [adminName, setAdminName] = useState("");
   const [adminCode, setAdminCode] = useState("");
   const [adminError, setAdminError] = useState("");
@@ -1045,7 +1148,45 @@ function App() {
   useEffect(() => {
     fetch("/api/branches")
       .then(res => res.json())
-      .then(data => setBranches(data || []))
+      .then(data => {
+        setBranches(data || []);
+        return data || [];
+      })
+      .then(branchList => {
+        // Only auto-detect location if no branch is already selected
+        const saved = localStorage.getItem("simba-selected-branch");
+        if (saved && saved !== "null") return;
+
+        if (!navigator.geolocation || branchList.length === 0) return;
+
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const user = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            let nearest = null;
+            let nearestDist = Infinity;
+
+            for (const branch of branchList) {
+              const coords =
+                BRANCH_COORDS_BY_LOCATION[branch.location] ||
+                BRANCH_COORDS[branch.name];
+              if (!coords) continue;
+              const dist = haversineKm(user, coords);
+              if (dist < nearestDist) {
+                nearestDist = dist;
+                nearest = branch;
+              }
+            }
+
+            if (nearest) {
+              setSelectedBranch(nearest);
+            }
+          },
+          (err) => {
+            console.log("Geolocation unavailable or denied:", err.message);
+          },
+          { enableHighAccuracy: false, timeout: 5000 },
+        );
+      })
       .catch(err => console.error("Failed to load branches:", err));
   }, []);
 
@@ -1282,19 +1423,73 @@ function App() {
       .slice(0, 4);
   }, [normalizeProducts, selectedProduct]);
 
-  const cartItems = useMemo(
-    () =>
-      Object.entries(cart)
-        .map(([id, quantity]) => {
-          const product = normalizeProducts.find((item) => item.id === Number(id));
-          return product ? { ...product, quantity } : null;
-        })
-        .filter(Boolean),
-    [cart, normalizeProducts],
+  const getDiscountLabel = (product) => {
+    const percent = getBlackFridayPercentForProduct(product);
+    if (!percent) return null;
+    return percent;
+  };
+
+
+  const BLACK_FRIDAY_PROMO = useMemo(
+    () => ({
+      active: true,
+      discounts: {
+        // 20% / 15% split happens randomly per product id for a varied experience.
+        highPercent: 20,
+        lowPercent: 15,
+        // deterministic so the same product always gets same discount during this session
+        seed: 1337,
+      },
+    }),
+    [],
   );
 
+  function getBlackFridayPercentForProduct(product) {
+    if (!BLACK_FRIDAY_PROMO?.active) return null;
+    if (!product?.inStock) return null;
+
+    // Deterministic pseudo-random from product id
+    const id = Number(product.id);
+    const x = Math.abs((id * 9301 + BLACK_FRIDAY_PROMO.discounts.seed * 49297) % 233280);
+    const ratio = x / 233280;
+
+    return ratio < 0.35
+      ? BLACK_FRIDAY_PROMO.discounts.highPercent
+      : BLACK_FRIDAY_PROMO.discounts.lowPercent;
+  }
+
+  function getEffectivePrice(product) {
+    const percent = getBlackFridayPercentForProduct(product);
+    if (!percent) return { price: product.price, originalPrice: null, percent: null };
+
+    const originalPrice = Number(product.price);
+    const discounted = Math.round(originalPrice * (1 - percent / 100));
+    return { price: discounted, originalPrice, percent };
+  }
+
+  const cartItems = useMemo(() => {
+    return Object.entries(cart)
+      .map(([id, quantity]) => {
+        const product = normalizeProducts.find((item) => item.id === Number(id));
+        if (!product) return null;
+        const effective = getEffectivePrice(product);
+        return {
+          ...product,
+          quantity,
+          effectivePrice: effective.price,
+          originalPrice: effective.originalPrice,
+          discountPercent: effective.percent,
+        };
+      })
+      .filter(Boolean);
+  }, [cart, normalizeProducts, BLACK_FRIDAY_PROMO]);
+
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = cartItems.reduce((sum, item) => sum + item.quantity * item.price, 0);
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + item.quantity * (item.effectivePrice ?? item.price),
+    0,
+  );
+
   const deliveryDistanceKm = useMemo(
     () => estimateDeliveryDistanceKm(form, selectedBranch),
     [form.district, form.location, selectedBranch],
@@ -1430,6 +1625,7 @@ function App() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(authToken ? { "Authorization": `Bearer ${authToken}` } : {})
         },
         body: JSON.stringify({
           branchId: selectedBranch?.id,
@@ -1454,7 +1650,6 @@ function App() {
       setCheckoutComplete(true);
       setCart({});
       setOrderStatus("idle");
-      setLoggedInPhone(form.phone);
       setActiveOrder(order);
       window.location.hash = `track-${order.id}`;
     } catch (error) {
@@ -1652,12 +1847,16 @@ function App() {
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow" style={{ cursor: 'pointer' }} onClick={() => window.location.hash = ''}>Simba Supermarket</p>
-          <h1 style={{ cursor: 'pointer' }} onClick={() => window.location.hash = ''}>
-            {t.tagline} {selectedBranch ? ` - ${selectedBranch.name}` : ""}
-          </h1>
+          <img
+            src="https://www.simbaonlineshopping.com/images/simbaheaderM.png"
+            onClick={() => window.location.hash = ''}
+            height={42}
+
+          />
         </div>
         <div className="topbar-actions">
+
+
           {selectedBranch && (
             <div className="language-switcher">
               <span className="language-switcher-label">{t.branchLabel}</span>
@@ -1665,24 +1864,21 @@ function App() {
                 className="ghost-button"
                 value={selectedBranch.id}
                 onChange={(e) => {
-                  const branch = branches.find(b => b.id === Number(e.target.value));
+                  const branchId = Number(e.target.value);
+                  const branch = branches.find(b => b.id === branchId);
                   if (branch) selectBranch(branch);
                 }}
               >
+                <option value={selectedBranch.id} disabled hidden>{selectedBranch.name}</option>
                 {branches.map(branch => (
-                  <option key={branch.id} value={branch.id}>
+                  <option key={branch.id} value={branch.id} style={{ color: 'var(--text)', backgroundColor: 'var(--surface-strong)' }}>
                     {branch.name}
                   </option>
                 ))}
               </select>
             </div>
           )}
-          <button className="ghost-button" onClick={() => window.location.hash = 'admin'}>{t.adminNav}</button>
-          <button className="ghost-button" onClick={openDemoMarketDashboard}>{t.marketNav}</button>
-          <button className="ghost-button" onClick={() => window.location.hash = 'delivery'}>{t.deliveryNav}</button>
-          {loggedInPhone && (
-            <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>{t.profileNav}</button>
-          )}
+
           <div className="language-switcher" aria-label={t.switchLanguage}>
             <span className="language-switcher-label">{t.switchLanguage}</span>
             <select
@@ -1691,22 +1887,81 @@ function App() {
               onChange={(e) => setLanguage(e.target.value)}
               aria-label={t.switchLanguage}
             >
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="rw">Kinyarwanda</option>
+              <option value="en" style={{ color: 'var(--text)', backgroundColor: 'var(--surface-strong)' }}>English</option>
+              <option value="fr" style={{ color: 'var(--text)', backgroundColor: 'var(--surface-strong)' }}>Français</option>
+              <option value="rw" style={{ color: 'var(--text)', backgroundColor: 'var(--surface-strong)' }}>Kinyarwanda</option>
             </select>
           </div>
+
           <button
             className="ghost-button"
             onClick={() => setTheme((current) => (current === "light" ? "dark" : "light"))}
+            title={theme === "light" ? t.darkMode : t.lightMode}
+            style={{ fontSize: '1.2rem' }}
           >
-            {theme === "light" ? t.darkMode : t.lightMode}
+            {theme === "light" ? "🌙" : "☀️"}
           </button>
-          <button className="cart-button" onClick={() => setCartOpen(true)}>
+
+          {authToken ? (
+            <button className="profile-button-icon" onClick={() => window.location.hash = 'profile'} title={t.profileNav}>
+              👤
+            </button>
+          ) : (
+            <div className="auth-links">
+              <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>{t.signIn}</button>
+              <button className="ghost-button" onClick={() => window.location.hash = 'profile'}>{t.signUp}</button>
+            </div>
+          )}
+
+          <button
+            className="hamburger"
+            onClick={() => setMobileMenuOpen((v) => !v)}
+            aria-label="Menu"
+            title="Menu"
+          >
+            ☰
+          </button>
+
+          <button
+            className="cart-button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setCartOpen(true);
+            }}
+          >
             {t.cart} ({cartCount})
           </button>
         </div>
+
+        {mobileMenuOpen && (
+          <div className="topbar-menu">
+            <div className="topbar-menu-inner">
+              <div className="mobile-categories">
+                <h4 className="mobile-categories-title">{t.categories}</h4>
+                <nav className="marketplace-nav-vertical">
+                  <button
+                    className={category === "All" ? "sidebar-nav-item active" : "sidebar-nav-item"}
+                    onClick={() => { selectCategory("All"); setMobileMenuOpen(false); }}
+                  >
+                    <span>{t.allCategories}</span>
+                  </button>
+                  {featuredCategories.map((item) => (
+                    <button
+                      key={item.name}
+                      className={item.name === category ? "sidebar-nav-item active" : "sidebar-nav-item"}
+                      onClick={() => { selectCategory(item.name); setMobileMenuOpen(false); }}
+                    >
+                      <span>{item.label}</span>
+                      <small>{item.count}</small>
+                    </button>
+                  ))}
+                </nav>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
+
 
       <main className="page">
         {(productsLoading && selectedBranch) ? (
@@ -1758,11 +2013,10 @@ function App() {
 
             {view === "profile" && (
               <UserProfile
-                phone={loggedInPhone}
-                onLogout={() => {
-                  setLoggedInPhone(null);
-                  window.location.hash = "";
-                }}
+                token={authToken}
+                user={user}
+                onLogout={handleLogout}
+                onLoginSuccess={handleLoginSuccess}
                 t={t}
                 formatCurrency={formatCurrency}
               />
@@ -1909,375 +2163,376 @@ function App() {
                 </section>
               ) : (
                 <>
-                  <nav className="marketplace-nav" aria-label={t.categories}>
-                    <button
-                      className={category === "All" ? "active" : ""}
-                      onClick={() => selectCategory("All")}
-                    >
-                      {t.allCategories}
-                    </button>
-                    {featuredCategories.slice(0, 8).map((item) => (
-                      <button
-                        key={item.name}
-                        className={item.name === category ? "active" : ""}
-                        onClick={() => selectCategory(item.name)}
-                      >
-                        {item.label}
-                      </button>
-                    ))}
-                  </nav>
+                  <section className="hero hero--video">
+                    <iframe
+                      className="hero-bg-video"
+                      src="https://www.youtube.com/embed/1wAXQ_FfYcc?autoplay=1&mute=1&loop=1&playlist=1wAXQ_FfYcc&controls=0"
+                      title="Groceries video"
+                      allow="autoplay; encrypted-media"
+                      allowFullScreen
+                    ></iframe>
 
-                  <section className="hero">
                     <div className="hero-copy">
-                      <span className="pill">{t.heroBadge}</span>
-                      <h2>{t.heroTitle}</h2>
-                      <p>{t.heroText}</p>
+                      <div className="hero-creative-header">
+                        <div className="deep-meaning-text">
+                          <p><em>"Guiding your journey home."</em></p>
+                        </div>
+                      </div>
                       <div className="hero-search">
-                        <input
-                          value={search}
-                          aria-busy={aiSearchLoading}
-                          onChange={(event) => {
-                            setSearch(event.target.value);
-                            setCurrentPage(1);
-                          }}
-                          placeholder={t.searchPlaceholder}
-                        />
-                        <div className="hero-search-actions">
-                          <button onClick={() => document.getElementById("catalogue")?.scrollIntoView()}>
-                            {t.discover}
-                          </button>
-                          <button
-                            className="secondary-button"
-                            onClick={handleSpeechSearch}
-                            disabled={!speechSupported || speechListening}
-                          >
-                            {speechListening ? t.speechListening : t.speechSearch}
-                          </button>
-                        </div>
-                      </div>
-                      <p className="hero-meta">{t.deliveryPromise}</p>
-                      <div className="hero-proof-grid">
-                        <div className="demo-access">
-                          <span className="demo-access-title">{t.demoAccessTitle}</span>
-                          <span>{t.demoAccessBuyer}</span>
-                          <span>{t.demoAccessAdmin}</span>
-                        </div>
-                        <div className="language-proof" data-testid="multi-language-support">
-                          <span className="demo-access-title">{t.languagePanelTitle}</span>
-                          <p>{t.languagePanelText}</p>
-                    <div className="language-proof-actions">
-                      <select
-                        className="ghost-button"
-                        value={language}
-                        onChange={(e) => setLanguage(e.target.value)}
-                        aria-label={t.switchLanguage}
-                      >
-                        <option value="en">English</option>
-                        <option value="fr">Français</option>
-                        <option value="rw">Kinyarwanda</option>
-                      </select>
-                    </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      className="hero-card"
-                      style={{ backgroundImage: `linear-gradient(180deg, transparent, rgba(12,16,28,0.82)), url(${heroCategory?.image})` }}
-                    >
-                      <span>{t.categorySpotlight}</span>
-                      <strong>{translateCategory(heroCategory?.name)}</strong>
-                      <small>
-                        {heroCategory?.count} {t.items}
-                      </small>
-                    </div>
-                  </section>
-
-                  <section className="recommendation-panel recommendation-panel-feature">
-                    <div className="section-heading">
-                      <div>
-                        <span className="recommendation-kicker">{t.recommendationKicker}</span>
-                        <h3>{t.recommendationTitle}</h3>
-                      </div>
-                      <p>{t.recommendationPrompt}</p>
-                    </div>
-                    <div className="recommendation-controls recommendation-controls-feature">
-                      <input
-                        value={feeling}
-                        onChange={(event) => setFeeling(event.target.value)}
-                        placeholder={t.recommendationInputPlaceholder}
-                      />
-                      <button onClick={handleRecommend} disabled={recommendationLoading}>
-                        {recommendationLoading ? t.recommendationThinking : t.recommendationButton}
-                      </button>
-                    </div>
-                    {recommendationIntro ? <p className="hero-meta">{recommendationIntro}</p> : null}
-                    {recommendationSource ? (
-                      <p className="hero-meta">
-                        {t.recommendationSourceLabel}: {recommendationSource === "fallback" ? t.localFallbackSource : `Gasuku via ${HF_MODEL}`}
-                      </p>
-                    ) : null}
-                    {recommendationError ? <p className="error-text">{recommendationError}</p> : null}
-                    {recommendationProducts.length > 0 ? (
-                      <div className="recommendation-grid">
-                        {recommendationProducts.map((product) => (
-                          <article className="mini-card recommendation-card" key={product.id}>
-                            <img src={resolveProductImage(product)} alt={product.name} />
-                            <div className="mini-card-body">
-                              <p className="product-category">{translateCategory(product.category)}</p>
-                              <button onClick={() => openProduct(product)}>{product.name}</button>
-                              <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
-                              <p className="recommendation-reason">{product.recommendationReason}</p>
-                              <div className="recommendation-actions">
-                                <button className="secondary-button" onClick={() => openProduct(product)}>
-                                  {t.viewDetails}
-                                </button>
-                                <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
-                              </div>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                    ) : null}
-                  </section>
-
-                  <section className="categories-panel">
-                    <div className="section-heading">
-                      <h3>{t.categories}</h3>
-                      <p>
-                        {filteredProducts.length} {t.searchResults}
-                      </p>
-                    </div>
-                    <div className="category-strip">
-                      {featuredCategories.map((item) => (
-                        <button
-                          key={item.name}
-                          className={item.name === category ? "category-card active" : "category-card"}
-                          onClick={() => selectCategory(item.name)}
-                          style={{ backgroundImage: `linear-gradient(180deg, rgba(10,17,28,0.15), rgba(10,17,28,0.78)), url(${item.image})` }}
-                        >
-                          <span>{item.count}</span>
-                          <strong>{item.label}</strong>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
-                  <section className="controls" id="catalogue">
-                    <div className="section-heading">
-                      <h3>{t.discover}</h3>
-                      <p>{t.featured}</p>
-                    </div>
-                    <div className="filters">
-                      <select
-                        value={category}
-                        onChange={(event) => selectCategory(event.target.value)}
-                      >
-                        <option value="All">{t.allCategories}</option>
-                        {categories
-                          .filter((item) => item !== "All")
-                          .map((item) => (
-                            <option key={item} value={item}>
-                              {translateCategory(item)}
-                            </option>
-                          ))}
-                      </select>
-                      <select
-                        value={sortBy}
-                        onChange={(event) => {
-                          setSortBy(event.target.value);
-                          setCurrentPage(1);
-                        }}
-                      >
-                        {sortOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option === "name"
-                              ? t.nameAZ
-                              : option === "price-asc"
-                                ? t.cheapest
-                                : t.priciest}
-                          </option>
-                        ))}
-                      </select>
-                      <label className="toggle">
-                        <input
-                          type="checkbox"
-                          checked={stockOnly}
-                          onChange={(event) => {
-                            setStockOnly(event.target.checked);
-                            setCurrentPage(1);
-                          }}
-                        />
-                        {t.inStockOnly}
-                      </label>
-                      <button
-                        className="ghost-button"
-                        onClick={() => {
-                          setCategory("All");
-                          setSearch("");
-                          setStockOnly(false);
-                          setSortBy("name");
-                          setCurrentPage(1);
-                          updateQuery({ category: null, product: null });
-                        }}
-                      >
-                        {t.resetFilters}
-                      </button>
-                    </div>
-                  </section>
-
-                  {!selectedProduct ? (
-                    <>
-                      <section className="product-grid">
-                        {visibleProducts.length === 0 ? (
-                          <div className="empty-results card">
-                            <h3>{t.noOrdersForBranch || "No products found."}</h3>
-                            <p>{t.resetFilters}</p>
+                        <div className="hero-search-input-wrap">
+                          <input
+                            value={search}
+                            aria-busy={aiSearchLoading}
+                            onChange={(event) => {
+                              setSearch(event.target.value);
+                              setCurrentPage(1);
+                            }}
+                            placeholder={t.searchPlaceholder}
+                          />
+                          <div className="hero-search-actions">
                             <button
+                              className="primary-button"
                               onClick={() => {
-                                setCategory("All");
-                                setSearch("");
-                                setStockOnly(false);
-                                setSortBy("name");
-                                setCurrentPage(1);
-                                updateQuery({ category: null, product: null });
+                                if (search.trim()) {
+                                  document.getElementById("catalogue")?.scrollIntoView({ behavior: "smooth" });
+                                }
                               }}
                             >
-                              {t.resetFilters}
+                              {t.discover}
+                            </button>
+                            <button
+                              className="secondary-button"
+                              onClick={handleSpeechSearch}
+                              disabled={!speechSupported || speechListening}
+                            >
+                              {speechListening ? "..." : "🎤"}
                             </button>
                           </div>
-                        ) : visibleProducts.map((product) => (
-                          <article className="product-card" key={product.id}>
-                            <button className="product-image" onClick={() => openProduct(product)}>
-                              <img src={resolveProductImage(product)} alt={product.name} loading="lazy" />
-                            </button>
-                            <div className="product-body">
-                              <div className="product-card-topline">
-                                <p className="product-category">{translateCategory(product.category)}</p>
-                                <span className={product.inStock ? "stock-chip" : "stock-chip muted"}>
-                                  {product.inStock ? t.inStockLabel : t.unavailableLabel}
-                                </span>
-                              </div>
-                              <button className="product-name" onClick={() => openProduct(product)}>
-                                {product.name}
-                              </button>
-                              <div className="rating-row" aria-label={`${getProductRating(product)} ${t.ratingLabel}`}>
-                                <span>★★★★★</span>
-                                <small>{getProductRating(product)}</small>
-                              </div>
-                              <div className="product-meta">
-                                <span className="product-price">{formatCurrency(product.price, t.locale, t.currency)}</span>
-                                <small>
-                                  {product.quantity} {product.unit} {t.availableLabel}
-                                </small>
-                              </div>
-                              <p className="delivery-line">{t.sameDayLabel}</p>
-                            </div>
-                            <div className="product-actions">
-                              <button className="secondary-button" onClick={() => openProduct(product)}>
-                                {t.viewDetails}
-                              </button>
-                              <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
-                            </div>
-                          </article>
-                        ))}
-                      </section>
-                      {pagination.totalPages > 1 && (
-                        <div className="pagination-controls">
-                          <button
-                            disabled={currentPage === 1}
-                            onClick={() => {
-                              setCurrentPage(p => Math.max(1, p - 1));
-                              window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
-                            }}
-                          >
-                            {t.previousPage}
-                          </button>
-                          <span>{t.pageLabel} {currentPage} {t.ofLabel} {pagination.totalPages}</span>
-                          <button
-                            disabled={currentPage === pagination.totalPages}
-                            onClick={() => {
-                              setCurrentPage(p => Math.min(pagination.totalPages, p + 1));
-                              window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
-                            }}
-                          >
-                            {t.nextPage}
-                          </button>
                         </div>
-                      )}
-                    </>
-                  ) : (
-                    <section className="detail-layout">
-                      <button className="back-link" onClick={closeProduct}>
-                        {t.detailBack}
-                      </button>
-                      <div className="detail-card">
-                        <div className="detail-image-wrap">
-                          <img src={resolveProductImage(selectedProduct)} alt={selectedProduct.name} />
-                        </div>
-                        <div className="detail-copy">
-                          <p className="product-category">{translateCategory(selectedProduct.category)}</p>
-                          <h3>{selectedProduct.name}</h3>
-                          <div className="rating-row detail-rating" aria-label={`${getProductRating(selectedProduct)} ${t.ratingLabel}`}>
-                            <span>★★★★★</span>
-                            <small>{getProductRating(selectedProduct)} {t.ratingLabel}</small>
-                          </div>
-                          <strong>
-                            {formatCurrency(selectedProduct.price, t.locale, t.currency)}
-                          </strong>
-                          <p>{t.paymentHint}</p>
-                          {/placehold\.co/i.test(selectedProduct.image) ? (
-                            <p className="hero-meta">{t.usingCuratedFallback}</p>
-                          ) : null}
-                          <dl className="detail-specs">
-                            <div>
-                              <dt>{t.quantityLabel}</dt>
-                              <dd>{selectedProduct.quantity} {selectedProduct.unit}</dd>
-                            </div>
-                            <div>
-                              <dt>{t.branchLabel}</dt>
-                              <dd>{selectedBranch.name}</dd>
-                            </div>
-                            <div>
-                              <dt>{t.statusLabel}</dt>
-                              <dd>{selectedProduct.inStock ? t.inStockLabel : t.unavailableLabel}</dd>
-                            </div>
-                            <div>
-                              <dt>{t.idLabel}</dt>
-                              <dd>#{selectedProduct.id}</dd>
-                            </div>
-                          </dl>
-                          <div className="detail-actions">
-                            <button onClick={() => addToCart(selectedProduct.id)}>{t.quickAdd}</button>
-                            <button className="secondary-button" onClick={() => setCartOpen(true)}>
-                              {t.cart}
-                            </button>
-                          </div>
+                        <div className="search-suggestions">
+                          <button onClick={() => { setSearch("I'm hosting a party"); document.getElementById("catalogue")?.scrollIntoView(); }}>{t.suggestionParty}</button>
+                          <button onClick={() => { setSearch("Healthy breakfast ideas"); document.getElementById("catalogue")?.scrollIntoView(); }}>{t.suggestionHealthy}</button>
+                          <button onClick={() => { setSearch("Cleaning my house"); document.getElementById("catalogue")?.scrollIntoView(); }}>{t.suggestionCleaning}</button>
+                          <button onClick={() => { setSearch("Baby care essentials"); document.getElementById("catalogue")?.scrollIntoView(); }}>{t.suggestionBaby}</button>
                         </div>
                       </div>
+                      <p className="hero-meta" style={{ marginTop: '0.5rem' }}>{t.deliveryPromise}</p>
+                    </div>
+                  </section>
 
-                      <div className="related-section">
-                        <div className="section-heading">
-                          <h3>{t.relatedProducts}</h3>
-                          <p>{t.productInfo}</p>
-                        </div>
-                        <div className="related-grid">
-                          {relatedProducts.map((product) => (
-                            <article className="mini-card" key={product.id}>
-                              <img src={resolveProductImage(product)} alt={product.name} />
-                              <button onClick={() => openProduct(product)}>{product.name}</button>
-                              <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
-                            </article>
+                  <div className="catalogue-layout">
+                    <aside className="sidebar">
+                      <div className="sidebar-section">
+                        <h4 className="sidebar-title">{t.categories}</h4>
+                        <nav className="marketplace-nav-vertical">
+                          <button
+                            className={category === "All" ? "sidebar-nav-item active" : "sidebar-nav-item"}
+                            onClick={() => selectCategory("All")}
+                          >
+                            <span>{t.allCategories}</span>
+                          </button>
+                          {featuredCategories.map((item) => (
+                            <button
+                              key={item.name}
+                              className={item.name === category ? "sidebar-nav-item active" : "sidebar-nav-item"}
+                              onClick={() => selectCategory(item.name)}
+                            >
+                              <span>{item.label}</span>
+                              <small>{item.count}</small>
+                            </button>
                           ))}
-                        </div>
+                        </nav>
                       </div>
-                    </section>
-                  )}
+                    </aside>
+
+                    <main className="catalogue-main">
+
+                      <nav className="mobile-category-bar">
+                        <button
+                          className={category === "All" ? "mobile-category-chip active" : "mobile-category-chip"}
+                          onClick={() => selectCategory("All")}
+                        >
+                          {t.allCategories}
+                        </button>
+                        {featuredCategories.map((item) => (
+                          <button
+                            key={item.name}
+                            className={item.name === category ? "mobile-category-chip active" : "mobile-category-chip"}
+                            onClick={() => selectCategory(item.name)}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </nav>
+
+                      <section className="controls" id="catalogue">
+                        <div className="section-heading">
+                          <h3>{t.discover}</h3>
+                          <p>{t.featured}</p>
+                        </div>
+                        <div className="filters">
+                          <select
+                            value={category}
+                            onChange={(event) => selectCategory(event.target.value)}
+                          >
+                            <option value="All">{t.allCategories}</option>
+                            {categories
+                              .filter((item) => item !== "All")
+                              .map((item) => (
+                                <option key={item} value={item}>
+                                  {translateCategory(item)}
+                                </option>
+                              ))}
+                          </select>
+                          <select
+                            value={sortBy}
+                            onChange={(event) => {
+                              setSortBy(event.target.value);
+                              setCurrentPage(1);
+                            }}
+                          >
+                            {sortOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {option === "name"
+                                  ? t.nameAZ
+                                  : option === "price-asc"
+                                    ? t.cheapest
+                                    : t.priciest}
+                              </option>
+                            ))}
+                          </select>
+                          <label className="toggle">
+                            <input
+                              type="checkbox"
+                              checked={stockOnly}
+                              onChange={(event) => {
+                                setStockOnly(event.target.checked);
+                                setCurrentPage(1);
+                              }}
+                            />
+                            {t.inStockOnly}
+                          </label>
+                          <button
+                            className="ghost-button"
+                            onClick={() => {
+                              setCategory("All");
+                              setSearch("");
+                              setStockOnly(false);
+                              setSortBy("name");
+                              setCurrentPage(1);
+                              updateQuery({ category: null, product: null });
+                            }}
+                          >
+                            {t.resetFilters}
+                          </button>
+                        </div>
+                      </section>
+
+                      {!selectedProduct ? (
+                        <>
+                          <div className="catalogue-products-window" aria-label="Product list">
+                            <section className="product-grid">
+                              {visibleProducts.length === 0 ? (
+                                <div className="empty-results card">
+                                  <h3>{t.noOrdersForBranch || "No products found."}</h3>
+
+                                  <p>{t.resetFilters}</p>
+                                  <button
+                                    onClick={() => {
+                                      setCategory("All");
+                                      setSearch("");
+                                      setStockOnly(false);
+                                      setSortBy("name");
+                                      setCurrentPage(1);
+                                      updateQuery({ category: null, product: null });
+                                    }}
+                                  >
+                                    {t.resetFilters}
+                                  </button>
+                                </div>
+                              ) : visibleProducts.map((product) => (
+                                <article className="product-card" key={product.id}>
+                                  <button className="product-image" onClick={() => openProduct(product)}>
+                                    <img src={resolveProductImage(product)} alt={product.name} loading="lazy" />
+                                  </button>
+                                  <div className="product-body">
+                                    <div className="product-card-topline">
+                                      <p className="product-category">{translateCategory(product.category)}</p>
+                                      <span className={product.inStock ? "stock-chip" : "stock-chip muted"}>
+                                        {product.inStock ? t.inStockLabel : t.unavailableLabel}
+                                      </span>
+                                    </div>
+                                    <button className="product-name" onClick={() => openProduct(product)}>
+                                      {product.name}
+                                    </button>
+                                    {product.searchReason && (
+                                      <div className="ai-reason">
+                                        <span className="ai-icon">✨</span> {product.searchReason}
+                                      </div>
+                                    )}
+                                    <div className="rating-row" aria-label={`${getProductRating(product)} ${t.ratingLabel}`}>
+
+                                      <span>★★★★★</span>
+                                      <small>{getProductRating(product)}</small>
+                                    </div>
+                                    <div className="product-meta">
+                                      {(() => {
+                                        const effective = getEffectivePrice(product);
+                                        const hasDiscount = Boolean(effective.originalPrice);
+                                        return (
+                                          <div className="price-block">
+                                            <span className={hasDiscount ? "product-price strike" : "product-price"}>
+                                              {formatCurrency(product.price, t.locale, t.currency)}
+                                            </span>
+                                            <span className={"product-price discounted"}>
+                                              {formatCurrency(effective.price, t.locale, t.currency)}
+                                            </span>
+                                            {hasDiscount && (
+                                              <span className="discount-badge">Black Friday -{effective.percent}%</span>
+                                            )}
+                                          </div>
+                                        );
+                                      })()}
+                                      <small>
+                                        {product.quantity} {product.unit} {t.availableLabel}
+                                      </small>
+                                    </div>
+
+                                    <p className="delivery-line">{t.sameDayLabel}</p>
+                                  </div>
+                                  <div className="product-actions">
+                                    <button className="secondary-button" onClick={() => openProduct(product)}>
+                                      {t.viewDetails}
+                                    </button>
+                                    <button onClick={() => addToCart(product.id)}>{t.quickAdd}</button>
+                                  </div>
+                                </article>
+                              ))}
+                            </section>
+                          </div>
+                          {pagination.totalPages > 1 && (
+
+                            <div className="pagination-controls">
+                              <button
+                                disabled={currentPage === 1}
+                                onClick={() => {
+                                  setCurrentPage(p => Math.max(1, p - 1));
+                                  window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
+                                }}
+                              >
+                                {t.previousPage}
+                              </button>
+                              <span>{t.pageLabel} {currentPage} {t.ofLabel} {pagination.totalPages}</span>
+                              <button
+                                disabled={currentPage === pagination.totalPages}
+                                onClick={() => {
+                                  setCurrentPage(p => Math.min(pagination.totalPages, p + 1));
+                                  window.scrollTo({ top: document.getElementById('catalogue').offsetTop, behavior: 'smooth' });
+                                }}
+                              >
+                                {t.nextPage}
+                              </button>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <section className="detail-layout">
+                          <button className="back-link" onClick={closeProduct}>
+                            {t.detailBack}
+                          </button>
+                          <div className="detail-card">
+                            <div className="detail-image-wrap">
+                              <img src={resolveProductImage(selectedProduct)} alt={selectedProduct.name} />
+                            </div>
+                            <div className="detail-copy">
+                              <p className="product-category">{translateCategory(selectedProduct.category)}</p>
+                              <h3>{selectedProduct.name}</h3>
+                              <div className="rating-row detail-rating" aria-label={`${getProductRating(selectedProduct)} ${t.ratingLabel}`}>
+                                <span>★★★★★</span>
+                                <small>{getProductRating(selectedProduct)} {t.ratingLabel}</small>
+                              </div>
+                              {(() => {
+                                const effective = getEffectivePrice(selectedProduct);
+                                const hasDiscount = Boolean(effective.originalPrice);
+                                return (
+                                  <>
+                                    {hasDiscount ? (
+                                      <div className="detail-price-block">
+                                        <span className="product-price strike">
+                                          {formatCurrency(selectedProduct.price, t.locale, t.currency)}
+                                        </span>
+                                        <span className="product-price discounted">
+                                          {formatCurrency(effective.price, t.locale, t.currency)}
+                                        </span>
+                                        <span className="discount-badge">Black Friday -{effective.percent}%</span>
+                                      </div>
+                                    ) : (
+                                      <strong>
+                                        {formatCurrency(selectedProduct.price, t.locale, t.currency)}
+                                      </strong>
+                                    )}
+                                  </>
+                                );
+                              })()}
+
+                              <p>{t.paymentHint}</p>
+                              {/placehold\.co/i.test(selectedProduct.image) ? (
+                                <p className="hero-meta">{t.usingCuratedFallback}</p>
+                              ) : null}
+                              <dl className="detail-specs">
+                                <div>
+                                  <dt>{t.quantityLabel}</dt>
+                                  <dd>{selectedProduct.quantity} {selectedProduct.unit}</dd>
+                                </div>
+                                <div>
+                                  <dt>{t.branchLabel}</dt>
+                                  <dd>{selectedBranch.name}</dd>
+                                </div>
+                                <div>
+                                  <dt>{t.statusLabel}</dt>
+                                  <dd>{selectedProduct.inStock ? t.inStockLabel : t.unavailableLabel}</dd>
+                                </div>
+                                <div>
+                                  <dt>{t.idLabel}</dt>
+                                  <dd>#{selectedProduct.id}</dd>
+                                </div>
+                              </dl>
+                              <div className="detail-actions">
+                                <button onClick={() => addToCart(selectedProduct.id)}>{t.quickAdd}</button>
+                                <button className="secondary-button" onClick={() => setCartOpen(true)}>
+                                  {t.cart}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="related-section">
+                            <div className="section-heading">
+                              <h3>{t.relatedProducts}</h3>
+                              <p>{t.productInfo}</p>
+                            </div>
+                            <div className="related-grid">
+                              {relatedProducts.map((product) => (
+                                <article className="mini-card" key={product.id}>
+                                  <img src={resolveProductImage(product)} alt={product.name} />
+                                  <button onClick={() => openProduct(product)}>{product.name}</button>
+                                  <span>{formatCurrency(product.price, t.locale, t.currency)}</span>
+                                </article>
+                              ))}
+                            </div>
+                          </div>
+                        </section>
+                      )}
+                    </main>
+                  </div>
                 </>
               )
             )}
           </>
         )}
       </main>
+
+      <Footer t={t} />
 
       <CartDrawer
         cartOpen={cartOpen}
@@ -2289,6 +2544,7 @@ function App() {
         setCheckoutComplete={setCheckoutComplete}
         setCheckoutStep={setCheckoutStep}
         checkoutStep={checkoutStep}
+        authToken={authToken}
         form={form}
         setForm={setForm}
         updateQuantity={updateQuantity}
@@ -2310,3 +2566,4 @@ function App() {
 }
 
 export default App;
+

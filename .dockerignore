@@ -1,0 +1,15 @@
+node_modules
+.git
+.gitignore
+.env
+.env.local
+.env.*.local
+dist
+.cache
+server/.cache
+server/data
+*.md
+TODO.md
+*.md.bak
+simba-search-tests.postman_collection.json
+scripts

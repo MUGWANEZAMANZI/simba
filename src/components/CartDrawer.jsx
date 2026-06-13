@@ -40,6 +40,7 @@ export default function CartDrawer({
   setCheckoutComplete,
   setCheckoutStep,
   checkoutStep,
+  authToken,
   form,
   setForm,
   updateQuantity,
@@ -55,6 +56,8 @@ export default function CartDrawer({
   deliveryOptions,
   deliveryDistanceKm,
 }) {
+  const isAuthenticated = !!authToken;
+
   return (
     <aside className={cartOpen ? "cart-drawer open" : "cart-drawer"}>
       <div className="cart-header">
@@ -89,32 +92,60 @@ export default function CartDrawer({
           </button>
         </div>
       ) : (
-        <>
-          <div className="cart-items">
-            {cartItems.map((item) => (
-              <article className="cart-item" key={item.id}>
-                <img src={resolveProductImage(item)} alt={item.name} />
-                <div>
-                  <strong>{item.name}</strong>
-                  <span>{formatCurrency(item.price, t.locale, t.currency)}</span>
-                </div>
-                <div className="qty-control">
-                  <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
-                  <span>{item.quantity}</span>
-                  <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
-                </div>
-              </article>
-            ))}
+        <div className="catalogue-products-window">
+          <div className="checkout-steps">
+            <span className={checkoutStep === 0 ? "active" : ""}>1. {t.cart}</span>
+            <span className={checkoutStep === 1 ? "active" : ""}>2. {t.deliveryStep}</span>
+            <span className={checkoutStep === 2 ? "active" : ""}>3. {t.paymentStep}</span>
           </div>
 
-          <div className="checkout-card">
-            <div className="checkout-steps">
-              <span className={checkoutStep === 0 ? "active" : ""}>{t.deliveryStep}</span>
-              <span className={checkoutStep === 1 ? "active" : ""}>{t.paymentStep}</span>
-              <span className={checkoutStep === 2 ? "active" : ""}>{t.reviewStep}</span>
-            </div>
+          {checkoutStep === 0 && (
+            <>
+              <div className="cart-items">
+                {cartItems.map((item) => (
+                  <article className="cart-item" key={item.id}>
+                    <img src={resolveProductImage(item)} alt={item.name} />
+                    <div>
+                      <strong>{item.name}</strong>
+                      {item.originalPrice ? (
+                        <div className="price-block">
+                          <span className="product-price strike">
+                            {formatCurrency(item.originalPrice, t.locale, t.currency)}
+                          </span>
+                          <span className="product-price discounted">
+                            {formatCurrency(item.effectivePrice, t.locale, t.currency)}
+                          </span>
+                          <span className="discount-badge">Black Friday -{item.discountPercent}%</span>
+                        </div>
+                      ) : (
+                        <span>{formatCurrency(item.price, t.locale, t.currency)}</span>
+                      )}
+                    </div>
+                    <div className="qty-control">
+                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
 
-            {checkoutStep === 0 && (
+              <div className="checkout-card" style={{ border: 'none', boxShadow: 'none', padding: '1rem 0 0' }}>
+                <div className="checkout-footer">
+                  <div>
+                    <span>{t.subtotal}</span>
+                    <strong>{formatCurrency(subtotal, t.locale, t.currency)}</strong>
+                  </div>
+                  <button onClick={() => setCheckoutStep(1)}>
+                    {t.checkout || 'Proceed to Checkout'}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {checkoutStep === 1 && (
+            <div className="checkout-card">
               <div className="checkout-form">
                 <input
                   placeholder={t.fullname}
@@ -176,10 +207,72 @@ export default function CartDrawer({
                   </p>
                 </div>
               </div>
-            )}
 
-            {checkoutStep === 1 && (
+              <div className="checkout-footer">
+                <div>
+                  <span>{t.subtotal}</span>
+                  <strong>{formatCurrency(subtotal, t.locale, t.currency)}</strong>
+                  <span className="checkout-total-line">
+                    Delivery: {formatCurrency(selectedDelivery?.fee || 0, t.locale, t.currency)}
+                  </span>
+                  <span className="checkout-total-line">Distance: {deliveryDistanceKm} km</span>
+                  <strong className="checkout-total-line">
+                    Total: {formatCurrency(grandTotal, t.locale, t.currency)}
+                  </strong>
+                </div>
+                <div className="checkout-footer-actions">
+                  <button className="ghost-button" onClick={() => setCheckoutStep(0)}>
+                    {t.back || 'Back'}
+                  </button>
+                  <button
+                    disabled={!canAdvanceFromDelivery()}
+                    onClick={() => {
+                      if (!canAdvanceFromDelivery()) {
+                        setRecommendationError(t.deliveryMissing);
+                        return;
+                      }
+                      setRecommendationError("");
+                      setCheckoutStep(2);
+                    }}
+                  >
+                    {t.continue || 'Continue'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {checkoutStep === 2 && (
+            <div className="checkout-card">
+              {!isAuthenticated && (
+                <div className="checkout-form">
+                  <h4 style={{ margin: '0 0 0.75rem' }}>{t.shippingInfo || 'Shipping Information'}</h4>
+                  <input
+                    placeholder={t.fullname}
+                    value={form.fullname}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, fullname: event.target.value }))
+                    }
+                  />
+                  <input
+                    placeholder={t.phone}
+                    value={form.phone}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, phone: event.target.value }))
+                    }
+                  />
+                  <input
+                    placeholder={t.address}
+                    value={form.address}
+                    onChange={(event) =>
+                      setForm((current) => ({ ...current, address: event.target.value }))
+                    }
+                  />
+                </div>
+              )}
+
               <div className="payment-options">
+                <h4 style={{ margin: '0 0 0.75rem' }}>{t.paymentMethod}</h4>
                 {["momo", "cash", "card"].map((method) => (
                   <button
                     key={method}
@@ -191,58 +284,31 @@ export default function CartDrawer({
                 ))}
                 <p>{t.paymentHint}</p>
               </div>
-            )}
 
-            {checkoutStep === 2 && (
-              <div className="review-panel">
-                <p>{form.fullname || "-"}</p>
-                <p>{form.phone || "-"}</p>
-                <p>{form.address || "-"}</p>
-                <p>{form.district}</p>
-                <p>
-                  Delivery: {selectedDelivery?.name} - {formatCurrency(selectedDelivery?.fee || 0, t.locale, t.currency)}
-                </p>
-                <p>Distance: {deliveryDistanceKm} km</p>
-                <p>
-                  {t.paymentMethod}: {form.paymentMethod === "momo" ? t.momo : form.paymentMethod === "cash" ? t.cash : t.card}
-                </p>
+              <div className="checkout-footer">
+                <div>
+                  <span>{t.subtotal}</span>
+                  <strong>{formatCurrency(subtotal, t.locale, t.currency)}</strong>
+                  <span className="checkout-total-line">
+                    Delivery: {formatCurrency(selectedDelivery?.fee || 0, t.locale, t.currency)}
+                  </span>
+                  <span className="checkout-total-line">Distance: {deliveryDistanceKm} km</span>
+                  <strong className="checkout-total-line">
+                    Total: {formatCurrency(grandTotal, t.locale, t.currency)}
+                  </strong>
+                </div>
+                <div className="checkout-footer-actions">
+                  <button className="ghost-button" onClick={() => setCheckoutStep(1)}>
+                    {t.back || 'Back'}
+                  </button>
+                  <button disabled={orderStatus === "saving"} onClick={submitOrder}>
+                    {orderStatus === "saving" ? t.orderSaving : t.placeOrder}
+                  </button>
+                </div>
               </div>
-            )}
-
-            <div className="checkout-footer">
-              <div>
-                <span>{t.subtotal}</span>
-                <strong>{formatCurrency(subtotal, t.locale, t.currency)}</strong>
-                <span className="checkout-total-line">
-                  Delivery: {formatCurrency(selectedDelivery?.fee || 0, t.locale, t.currency)}
-                </span>
-                <span className="checkout-total-line">Distance: {deliveryDistanceKm} km</span>
-                <strong className="checkout-total-line">
-                  Total: {formatCurrency(grandTotal, t.locale, t.currency)}
-                </strong>
-              </div>
-              {checkoutStep < 2 ? (
-                <button
-                  disabled={checkoutStep === 0 && !canAdvanceFromDelivery()}
-                  onClick={() => {
-                    if (checkoutStep === 0 && !canAdvanceFromDelivery()) {
-                      setRecommendationError(t.deliveryMissing);
-                      return;
-                    }
-                    setRecommendationError("");
-                    setCheckoutStep((current) => current + 1);
-                  }}
-                >
-                  {t.checkout}
-                </button>
-              ) : (
-                <button disabled={orderStatus === "saving"} onClick={submitOrder}>
-                  {orderStatus === "saving" ? t.orderSaving : t.placeOrder}
-                </button>
-              )}
             </div>
-          </div>
-        </>
+          )}
+        </div>
       )}
     </aside>
   );
