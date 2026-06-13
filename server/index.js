@@ -371,21 +371,6 @@ app.post("/api/auth/register", async (req, res) => {
   }
 });
 
-app.post("/api/auth/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-      return res.status(401).json({ error: "Invalid email or password." });
-    }
-
-    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
-    res.json({ token, user: { id: user.id, fullName: user.full_name, email: user.email, phone: user.phone, address: user.address, district: user.district } });
-  } catch (err) {
-    res.status(500).json({ error: "Login failed." });
-  }
-});
-
 app.get("/api/auth/me", async (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: "Unauthorized" });
@@ -393,7 +378,10 @@ app.get("/api/auth/me", async (req, res) => {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare("SELECT id, full_name, email, phone, address, district FROM users WHERE id = ?").get(decoded.userId);
+    let user = db.prepare("SELECT id, full_name, email, phone, address, district FROM users WHERE id = ?").get(decoded.userId);
+    if (!user) {
+      user = db.prepare("SELECT id, full_name, phone, address, district, NULL AS email FROM accounts WHERE id = ?").get(decoded.userId);
+    }
     if (!user) return res.status(404).json({ error: "User not found" });
     res.json(user);
   } catch (err) {
@@ -408,7 +396,10 @@ app.get("/api/user/orders", async (req, res) => {
   const token = authHeader.split(" ")[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare("SELECT phone FROM users WHERE id = ?").get(decoded.userId);
+    let user = db.prepare("SELECT phone FROM users WHERE id = ?").get(decoded.userId);
+    if (!user) {
+      user = db.prepare("SELECT phone FROM accounts WHERE id = ?").get(decoded.userId);
+    }
     if (!user) return res.status(404).json({ error: "User not found" });
 
     const orders = db.prepare("SELECT * FROM orders WHERE phone = ? ORDER BY created_at DESC").all(user.phone);
@@ -703,29 +694,45 @@ app.get("/api/user/:phone", (req, res) => {
   res.json({ account, orders });
 });
 
-// Simple auth endpoint for test buyer credentials (creates account if missing)
-app.post("/api/auth/login", (req, res) => {
+// Unified login: test buyers + registered users. Returns { token, user }.
+app.post("/api/auth/login", async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).json({ error: "email and password required" });
 
-  const buyer = TEST_BUYERS.find((b) => b.email === email && b.password === password);
-  if (!buyer) return res.status(401).json({ error: "Invalid credentials" });
+  try {
+    // 1. Check hardcoded test buyers first
+    const buyer = TEST_BUYERS.find((b) => b.email === email && b.password === password);
+    if (buyer) {
+      const timestamp = new Date().toISOString();
+      upsertAccount.run({
+        full_name: buyer.full_name,
+        phone: buyer.phone,
+        address: buyer.address,
+        district: buyer.district,
+        latitude: null,
+        longitude: null,
+        created_at: timestamp,
+        last_order_at: timestamp,
+      });
+      const account = db.prepare("SELECT * FROM accounts WHERE phone = ?").get(buyer.phone);
+      const token = jwt.sign({ userId: account.id }, JWT_SECRET, { expiresIn: "7d" });
+      return res.json({
+        token,
+        user: { id: account.id, fullName: account.full_name, email: buyer.email, phone: account.phone, address: account.address, district: account.district },
+      });
+    }
 
-  // Upsert into accounts using phone
-  const timestamp = new Date().toISOString();
-  upsertAccount.run({
-    full_name: buyer.full_name,
-    phone: buyer.phone,
-    address: buyer.address,
-    district: buyer.district,
-    latitude: null,
-    longitude: null,
-    created_at: timestamp,
-    last_order_at: timestamp,
-  });
+    // 2. Check registered users table
+    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: "Invalid email or password." });
+    }
 
-  const account = db.prepare("SELECT * FROM accounts WHERE phone = ?").get(buyer.phone);
-  res.json({ account });
+    const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "7d" });
+    res.json({ token, user: { id: user.id, fullName: user.full_name, email: user.email, phone: user.phone, address: user.address, district: user.district } });
+  } catch (err) {
+    res.status(500).json({ error: "Login failed." });
+  }
 });
 
 // Admin APIs
