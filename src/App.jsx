@@ -2142,6 +2142,11 @@ function App() {
                       </select>
                     </div>
                   </div>
+                  <div className="test-credentials-banner" style={{ marginBottom: '1rem' }}>
+                    <strong>{t.demoAccessTitle}</strong>
+                    <p>{t.demoAccessBuyer}</p>
+                    <p>{t.demoAccessAdmin}</p>
+                  </div>
                   <div className="branch-grid">
                     {branches.map(branch => (
                       <button

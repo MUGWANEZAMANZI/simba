@@ -1165,6 +1165,28 @@ select option {
   box-shadow: none;
 }
 
+.test-credentials-banner {
+  background: var(--accent-soft, #fef3c7);
+  border: 1px solid var(--accent, #f0b323);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.test-credentials-banner strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.test-credentials-banner p {
+  margin: 0;
+  color: var(--text, #111827);
+  font-family: monospace;
+}
+
 .overlay {
   position: fixed;
   inset: 0;

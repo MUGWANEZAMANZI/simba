@@ -124,6 +124,11 @@ export default function UserProfile({ token, user, onLogout, onLoginSuccess, t, 
   if (!token || !user) {
     return (
       <div className="auth-container card">
+        <div className="test-credentials-banner">
+          <strong>{t.demoAccessTitle}</strong>
+          <p>{t.demoAccessBuyer}</p>
+          <p>{t.demoAccessAdmin}</p>
+        </div>
         {authMode === "login" && (
           <form className="auth-form" onSubmit={handleLogin}>
             <h2>{t.signIn || 'Sign In'}</h2>
